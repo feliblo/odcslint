@@ -90,7 +90,10 @@ mod tests {
     #[test]
     fn checks_file_name_pattern() {
         let yaml = "type: file_naming\npattern: '*.odcs.yaml'\n";
-        assert!(messages_at(yaml, "id: x\n", "a/orders.odcs.yaml").is_empty());
+        assert_eq!(
+            messages_at(yaml, "id: x\n", "a/orders.odcs.yaml"),
+            Vec::<String>::new()
+        );
         assert_eq!(
             messages_at(yaml, "id: x\n", "a/orders.odcs.yml"),
             vec!["file name `orders.odcs.yml` does not match `*.odcs.yaml`"]
@@ -100,7 +103,10 @@ mod tests {
     #[test]
     fn stem_must_match_name() {
         let yaml = "type: file_naming\nmatch_field: name\n";
-        assert!(messages_at(yaml, "name: orders\n", "orders.odcs.yaml").is_empty());
+        assert_eq!(
+            messages_at(yaml, "name: orders\n", "orders.odcs.yaml"),
+            Vec::<String>::new()
+        );
         assert_eq!(
             messages_at(yaml, "name: sales\n", "x/orders.odcs.yaml"),
             vec!["file name `orders.odcs.yaml` does not match contract name `sales`"]

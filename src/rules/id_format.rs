@@ -47,12 +47,12 @@ pub fn check(options: &IdFormat, context: &Context<'_>) -> Vec<Violation> {
 
 #[cfg(test)]
 mod tests {
-    use crate::rules::test_support::{messages, rule};
+    use crate::rules::test_support::{assert_passes, messages, rule};
 
     #[test]
     fn accepts_uuid() {
         let kind = rule("type: id_format\n");
-        assert!(messages(&kind, "id: 53581432-6c55-4ba2-a65f-72344a91553c\n").is_empty());
+        assert_passes(&kind, "id: 53581432-6c55-4ba2-a65f-72344a91553c\n");
     }
 
     #[test]
@@ -76,6 +76,6 @@ mod tests {
     #[test]
     fn missing_id_is_left_to_the_schema() {
         let kind = rule("type: id_format\n");
-        assert!(messages(&kind, "name: x\n").is_empty());
+        assert_passes(&kind, "name: x\n");
     }
 }

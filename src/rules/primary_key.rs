@@ -115,7 +115,7 @@ fn check_object(
 
 #[cfg(test)]
 mod tests {
-    use crate::rules::test_support::{messages, rule};
+    use crate::rules::test_support::{assert_passes, messages, rule};
 
     fn contract(properties: &str) -> String {
         format!("schema:\n  - name: orders\n    properties:\n{properties}")
@@ -127,7 +127,7 @@ mod tests {
         let source = contract(
             "      - name: a\n        primaryKey: true\n        primaryKeyPosition: 1\n      - name: b\n        primaryKey: true\n        primaryKeyPosition: 2\n      - name: c\n",
         );
-        assert!(messages(&kind, &source).is_empty());
+        assert_passes(&kind, &source);
     }
 
     #[test]
@@ -145,11 +145,10 @@ mod tests {
     #[test]
     fn position_can_be_optional() {
         let kind = rule("type: primary_key\nrequire_position: false\n");
-        assert!(messages(
+        assert_passes(
             &kind,
-            &contract("      - name: a\n        primaryKey: true\n")
-        )
-        .is_empty());
+            &contract("      - name: a\n        primaryKey: true\n"),
+        );
     }
 
     #[test]
@@ -167,11 +166,10 @@ mod tests {
     #[test]
     fn default_position_is_not_reported() {
         let kind = rule("type: primary_key\n");
-        assert!(messages(
+        assert_passes(
             &kind,
-            &contract("      - name: a\n        primaryKeyPosition: -1\n")
-        )
-        .is_empty());
+            &contract("      - name: a\n        primaryKeyPosition: -1\n"),
+        );
     }
 
     #[test]

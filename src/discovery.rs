@@ -3,8 +3,8 @@ use std::sync::mpsc;
 
 use ignore::{WalkBuilder, WalkState};
 
-use crate::config::normalize_path;
 use crate::config::pattern::{glob, GlobList};
+use crate::config::{normalize_path, relative_path};
 use crate::error::{Error, Result};
 
 const GLOB_CHARACTERS: [char; 4] = ['*', '?', '[', '{'];
@@ -16,6 +16,8 @@ pub struct Discovery<'a> {
     pub exclude: &'a GlobList,
     pub force_exclude: bool,
     pub respect_ignore: bool,
+    /// Directory `include` and `exclude` are relative to (the config's directory).
+    pub root: &'a Path,
 }
 
 pub fn discover(inputs: &[String], options: &Discovery<'_>) -> Result<Vec<PathBuf>> {
@@ -32,7 +34,8 @@ pub fn discover(inputs: &[String], options: &Discovery<'_>) -> Result<Vec<PathBu
 }
 
 fn discover_input(input: &str, options: &Discovery<'_>) -> Result<Vec<PathBuf>> {
-    let excluded = |path: &str| options.exclude.is_match(path);
+    let config_path = |path: &Path| relative_path(options.root, path);
+    let excluded = |path: &Path| options.exclude.is_match(&config_path(path));
     if is_glob(input) {
         let pattern = normalize_path(Path::new(input));
         let matcher = glob(&pattern)
@@ -42,12 +45,12 @@ fn discover_input(input: &str, options: &Discovery<'_>) -> Result<Vec<PathBuf>> 
             })?
             .compile_matcher();
         Ok(walk(&glob_root(&pattern), options.respect_ignore, |path| {
-            matcher.is_match(path) && !excluded(path)
+            matcher.is_match(normalize_path(path)) && !excluded(path)
         }))
     } else {
         let path = Path::new(input);
         if path.is_file() {
-            let skip = options.force_exclude && excluded(&normalize_path(path));
+            let skip = options.force_exclude && excluded(path);
             Ok(if skip {
                 Vec::new()
             } else {
@@ -55,7 +58,7 @@ fn discover_input(input: &str, options: &Discovery<'_>) -> Result<Vec<PathBuf>> 
             })
         } else if path.is_dir() {
             Ok(walk(path, options.respect_ignore, |path| {
-                options.include.is_match(path) && !excluded(path)
+                options.include.is_match(&config_path(path)) && !excluded(path)
             }))
         } else {
             Err(Error::PathNotFound(path.to_path_buf()))
@@ -81,7 +84,7 @@ fn glob_root(pattern: &str) -> PathBuf {
     }
 }
 
-fn walk(root: &Path, respect_ignore: bool, keep: impl Fn(&str) -> bool + Sync) -> Vec<PathBuf> {
+fn walk(root: &Path, respect_ignore: bool, keep: impl Fn(&Path) -> bool + Sync) -> Vec<PathBuf> {
     let (sender, receiver) = mpsc::channel();
     WalkBuilder::new(root)
         .standard_filters(respect_ignore)
@@ -93,7 +96,7 @@ fn walk(root: &Path, respect_ignore: bool, keep: impl Fn(&str) -> bool + Sync) -
                 match entry {
                     Ok(entry) => {
                         let is_file = entry.file_type().is_some_and(|kind| kind.is_file());
-                        if is_file && keep(&normalize_path(entry.path())) {
+                        if is_file && keep(entry.path()) {
                             // The receiver outlives the walk, so sending cannot fail.
                             let _ = sender.send(entry.into_path());
                         }
@@ -138,6 +141,7 @@ mod tests {
             exclude: &exclude,
             force_exclude,
             respect_ignore: false,
+            root,
         };
         let inputs: Vec<String> = inputs
             .iter()
@@ -203,7 +207,7 @@ mod tests {
             &["**/sandbox/**"],
             true,
         );
-        assert!(found.is_empty());
+        assert_eq!(found, Vec::<String>::new());
     }
 
     #[test]
@@ -226,6 +230,7 @@ mod tests {
             exclude: &include,
             force_exclude: false,
             respect_ignore: true,
+            root: Path::new(""),
         };
         let error = discover(&["does/not/exist".to_string()], &options).unwrap_err();
         assert!(matches!(error, Error::PathNotFound(_)));

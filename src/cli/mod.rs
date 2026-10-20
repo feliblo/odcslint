@@ -114,7 +114,9 @@ pub fn run(cli: &Cli) -> Result<u8> {
 fn check(args: &CheckArgs) -> Result<u8> {
     let config_path = match &args.config {
         Some(path) => Some(path.clone()),
-        None => config::find(Path::new(CURRENT_DIRECTORY))?,
+        None => {
+            config::find(Path::new(CURRENT_DIRECTORY))?.map(|found| relative_to_current(&found))
+        }
     };
     log::debug!(
         "config: {}",
@@ -130,6 +132,7 @@ fn check(args: &CheckArgs) -> Result<u8> {
             exclude: &config.settings.exclude,
             force_exclude: args.force_exclude,
             respect_ignore: !args.no_ignore,
+            root: &config.root,
         },
     )?;
     if paths.is_empty() && !args.allow_empty {
@@ -164,6 +167,26 @@ fn check(args: &CheckArgs) -> Result<u8> {
     } else {
         exit_code::SUCCESS
     })
+}
+
+/// `path` relative to the working directory, using `..` when the config lives in a parent.
+fn relative_to_current(path: &Path) -> PathBuf {
+    let Some(current) = config::absolute(Path::new(CURRENT_DIRECTORY)) else {
+        return path.to_path_buf();
+    };
+    current
+        .ancestors()
+        .find(|ancestor| path.starts_with(ancestor))
+        .and_then(|common| {
+            let ups = current.strip_prefix(common).ok()?.components().count();
+            let rest = path.strip_prefix(common).ok()?;
+            Some(
+                std::iter::repeat_n(Path::new(".."), ups)
+                    .collect::<PathBuf>()
+                    .join(rest),
+            )
+        })
+        .unwrap_or_else(|| path.to_path_buf())
 }
 
 fn without_warnings(reports: Vec<FileReport>) -> Vec<FileReport> {

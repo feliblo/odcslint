@@ -1,28 +1,39 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use serde::de::DeserializeOwned;
-use serde::Deserialize;
-
-use super::Config;
+use super::parse::parse;
+use super::{absolute, Config};
 use crate::constants::{CONFIG_FILE_NAMES, PYPROJECT_FILE_NAME};
-use crate::document::to_json::to_json;
-use crate::document::Document;
 use crate::error::{Error, Result};
 
-const TOML_EXTENSION: &str = "toml";
+const GIT_DIR: &str = ".git";
 
-#[derive(Deserialize)]
-struct PyProject {
-    tool: Option<Tool>,
+/// Searches `start` and its parents up to the git repository root. Outside a git repository only
+/// `start` itself is searched, so a stray config higher up is never picked up by surprise.
+pub fn find(start: &Path) -> Result<Option<PathBuf>> {
+    let start = absolute(start).unwrap_or_else(|| start.to_path_buf());
+    let git_root = start
+        .ancestors()
+        .find(|directory| directory.join(GIT_DIR).exists());
+    let directories: Vec<&Path> = git_root.map_or_else(
+        || vec![start.as_path()],
+        |root| {
+            start
+                .ancestors()
+                .take_while(|directory| *directory != root)
+                .chain(std::iter::once(root))
+                .collect()
+        },
+    );
+    for directory in directories {
+        if let Some(path) = find_in(directory)? {
+            return Ok(Some(path));
+        }
+    }
+    Ok(None)
 }
 
-#[derive(Deserialize)]
-struct Tool {
-    odcslint: Option<Config>,
-}
-
-pub fn find(directory: &Path) -> Result<Option<PathBuf>> {
+fn find_in(directory: &Path) -> Result<Option<PathBuf>> {
     let pyproject = directory.join(PYPROJECT_FILE_NAME);
     let pyproject = if pyproject.is_file() && has_tool_section(&pyproject)? {
         Some(pyproject)
@@ -49,55 +60,13 @@ pub fn load(path: Option<&Path>) -> Result<Config> {
         path: path.to_path_buf(),
         source,
     })?;
-    let config = parse(path, &source).map_err(|message| Error::Config {
+    let config = parse(path, &source).map_err(|invalid| Error::Config {
         path: path.to_path_buf(),
-        message,
+        location: invalid.location,
+        message: invalid.message,
     })?;
-    config.validate().map_err(|message| Error::Config {
-        path: path.to_path_buf(),
-        message,
-    })?;
-    Ok(config)
-}
-
-fn parse(path: &Path, source: &str) -> std::result::Result<Config, String> {
-    if is_pyproject(path) {
-        parse_toml::<PyProject>(source).map(|pyproject| {
-            pyproject
-                .tool
-                .and_then(|tool| tool.odcslint)
-                .unwrap_or_default()
-        })
-    } else if path
-        .extension()
-        .is_some_and(|extension| extension == TOML_EXTENSION)
-    {
-        parse_toml(source)
-    } else {
-        parse_yaml(source)
-    }
-}
-
-fn parse_toml<T: DeserializeOwned>(source: &str) -> std::result::Result<T, String> {
-    toml::from_str(source).map_err(|error| error.to_string())
-}
-
-fn parse_yaml(source: &str) -> std::result::Result<Config, String> {
-    if source.trim().is_empty() {
-        return Ok(Config::default());
-    }
-    let document = Document::parse(source).map_err(|error| {
-        format!(
-            "{} at line {} column {}",
-            error.message, error.location.line, error.location.column
-        )
-    })?;
-    serde_json::from_value(to_json(document.root())).map_err(|error| error.to_string())
-}
-
-fn is_pyproject(path: &Path) -> bool {
-    path.file_name()
-        .is_some_and(|name| name == PYPROJECT_FILE_NAME)
+    let root = path.parent().and_then(absolute).unwrap_or_default();
+    Ok(Config { root, ..config })
 }
 
 fn has_tool_section(path: &Path) -> Result<bool> {
@@ -120,6 +89,59 @@ mod tests {
         let path = directory.join(name);
         fs::write(&path, contents).unwrap();
         path
+    }
+
+    fn git_repo() -> tempfile::TempDir {
+        let directory = tempfile::tempdir().unwrap();
+        fs::create_dir(directory.path().join(GIT_DIR)).unwrap();
+        directory
+    }
+
+    #[test]
+    fn finds_config_in_parent_directory() {
+        let repo = git_repo();
+        let config = write(repo.path(), "odcslint.yml", "");
+        let nested = repo.path().join("contracts/sales");
+        fs::create_dir_all(&nested).unwrap();
+        assert_eq!(find(&nested).unwrap(), absolute(&config));
+    }
+
+    #[test]
+    fn nearest_config_wins() {
+        let repo = git_repo();
+        write(repo.path(), "odcslint.yml", "");
+        let nested = repo.path().join("contracts");
+        fs::create_dir_all(&nested).unwrap();
+        let near = write(&nested, "odcslint.toml", "");
+        assert_eq!(find(&nested).unwrap(), absolute(&near));
+    }
+
+    #[test]
+    fn stops_at_git_root() {
+        let outer = tempfile::tempdir().unwrap();
+        write(outer.path(), "odcslint.yml", "");
+        let repo = outer.path().join("repo");
+        fs::create_dir_all(repo.join(GIT_DIR)).unwrap();
+        assert_eq!(find(&repo).unwrap(), None);
+    }
+
+    #[test]
+    fn outside_git_only_searches_start_directory() {
+        let outer = tempfile::tempdir().unwrap();
+        write(outer.path(), "odcslint.yml", "");
+        let nested = outer.path().join("nested");
+        fs::create_dir_all(&nested).unwrap();
+        assert_eq!(find(&nested).unwrap(), None);
+    }
+
+    #[test]
+    fn loaded_config_remembers_its_directory() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = write(directory.path(), "odcslint.yml", "");
+        assert_eq!(
+            load(Some(&path)).unwrap().root,
+            absolute(directory.path()).unwrap()
+        );
     }
 
     #[test]
@@ -212,7 +234,7 @@ mod tests {
             "rules:\n  - type: allowed_values\n    name: owners\n    field: domain\n",
         );
         let error = load(Some(&path)).unwrap_err();
-        assert!(error.to_string().contains("rule `owners`"));
+        assert!(error.to_string().contains("rules[0] (allowed_values)"));
     }
 
     #[test]
