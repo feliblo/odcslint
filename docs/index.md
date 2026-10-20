@@ -135,12 +135,6 @@ Found 4 errors and 0 warnings (2 files checked). 2 findings marked [*] can be fi
         brew install feliblo/tap/odcslint
         ```
 
-    === "npm"
-
-        ```bash
-        npm install -g @feliblo/odcslint
-        ```
-
 2.  Check every `*.odcs.yaml` below the current directory against the ODCS schema:
 
     ```bash

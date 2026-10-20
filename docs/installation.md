@@ -1,6 +1,6 @@
 # Installation
 
-odcslint is a single executable. Install it with whichever package manager you already use; the pip and npm packages contain the same binary, so you don't need Python or Node to run it.
+odcslint is a single executable. Install it with whichever package manager you already use; the pip package contains the same binary, so you don't need Python to run it.
 
 === "pip / uv"
 
@@ -16,12 +16,6 @@ odcslint is a single executable. Install it with whichever package manager you a
 
     ```bash
     brew install feliblo/tap/odcslint
-    ```
-
-=== "npm"
-
-    ```bash
-    npm install -g @feliblo/odcslint
     ```
 
 === "Shell (macOS / Linux)"
