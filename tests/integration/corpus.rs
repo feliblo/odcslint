@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::Path;
 
 use odcslint::config::Config;
 use odcslint::engine::{check_files, lint};
@@ -17,7 +18,7 @@ const KNOWN_VERSION_MISMATCHES: [&str; 3] = [
 fn is_known_mismatch(path: &str) -> bool {
     KNOWN_VERSION_MISMATCHES
         .iter()
-        .any(|suffix| path.ends_with(suffix))
+        .any(|suffix| Path::new(path).ends_with(suffix))
 }
 
 fn findings_for(path: &std::path::Path) -> Vec<String> {
