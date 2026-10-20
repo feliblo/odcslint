@@ -2,21 +2,46 @@ use regex::Regex;
 use serde::Deserialize;
 
 use super::{Context, Violation};
+use crate::config::suggest::lookup;
 use crate::constants::keys;
 use crate::document::node::{as_str, get};
 use crate::document::Node;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "snake_case")]
+#[serde(try_from = "String")]
 pub enum NameTarget {
-    #[serde(alias = "schema.name")]
     SchemaName,
-    #[serde(alias = "schema.physicalName")]
     SchemaPhysicalName,
-    #[serde(alias = "schema.properties.name")]
     PropertyName,
-    #[serde(alias = "schema.properties.physicalName")]
     PropertyPhysicalName,
+}
+
+/// `(ODCS path, short name, target)`; both spellings are accepted in the config.
+const NAME_TARGETS: [(&str, &str, NameTarget); 4] = [
+    ("schema.name", "schema_name", NameTarget::SchemaName),
+    (
+        "schema.physicalName",
+        "schema_physical_name",
+        NameTarget::SchemaPhysicalName,
+    ),
+    (
+        "schema.properties.name",
+        "property_name",
+        NameTarget::PropertyName,
+    ),
+    (
+        "schema.properties.physicalName",
+        "property_physical_name",
+        NameTarget::PropertyPhysicalName,
+    ),
+];
+
+impl TryFrom<String> for NameTarget {
+    type Error = String;
+
+    fn try_from(name: String) -> Result<Self, Self::Error> {
+        lookup(&name, &NAME_TARGETS, "target")
+    }
 }
 
 impl NameTarget {

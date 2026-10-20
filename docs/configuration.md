@@ -95,4 +95,8 @@ Globs in the config, including a rule's `includes` and `excludes`, are matched a
 
 You can list the same rule type more than once, for example with different values, a different `name`, or different `includes` and `excludes`.
 
-odcslint rejects unknown keys and invalid regexes or globs. It prints a message naming the problem and exits with code `2`.
+odcslint rejects unknown keys, unknown rule types and invalid regexes or globs, and exits with code `2`. The error names the file, line and rule, and suggests the closest valid name when you made a typo:
+
+```text
+error: invalid config odcslint.yml:4:5: rules[0] (allowed_values): unknown field `valuse`, expected one of `field`, `values`, `pattern`, `role`, `required`, `case_sensitive`; did you mean `values`?
+```

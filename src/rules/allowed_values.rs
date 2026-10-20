@@ -1,46 +1,110 @@
+use std::collections::BTreeMap;
+
 use serde::Deserialize;
 
 use super::{default_true, list, Context, Violation};
 use crate::config::pattern::Pattern;
+use crate::config::suggest::lookup;
 use crate::constants::keys;
 use crate::document::node::{get, scalar_items, scalar_text};
 use crate::document::Node;
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "snake_case")]
+#[serde(try_from = "FieldSpec")]
 #[remain::sorted]
 pub enum ContractField {
-    #[serde(alias = "apiVersion")]
     ApiVersion,
-    #[serde(alias = "tags")]
     ContractTags,
-    #[serde(alias = "customProperties")]
     CustomProperty(String),
-    #[serde(alias = "dataProduct")]
     DataProduct,
     Domain,
-    #[serde(alias = "schema.properties.classification")]
     PropertyClassification,
-    #[serde(alias = "schema.properties.logicalType")]
     PropertyLogicalType,
-    #[serde(alias = "schema.properties.physicalType")]
     PropertyPhysicalType,
-    #[serde(alias = "schema.properties.tags")]
     PropertyTags,
-    #[serde(alias = "schema.name")]
     SchemaName,
-    #[serde(alias = "schema.physicalType")]
     SchemaPhysicalType,
-    #[serde(alias = "schema.tags")]
     SchemaTags,
     Status,
-    #[serde(alias = "team.members.role")]
     TeamMembersRole,
-    #[serde(alias = "team.members.username")]
     TeamMembersUsername,
-    #[serde(alias = "team.name")]
     TeamName,
     Tenant,
+}
+
+const CUSTOM_PROPERTY_KEYS: [&str; 2] = ["customProperties", "custom_property"];
+
+/// `(ODCS path, short name, field)`; both spellings are accepted in the config.
+const NAMED_FIELDS: [(&str, &str, ContractField); 16] = [
+    ("apiVersion", "api_version", ContractField::ApiVersion),
+    ("domain", "domain", ContractField::Domain),
+    ("status", "status", ContractField::Status),
+    ("tenant", "tenant", ContractField::Tenant),
+    ("dataProduct", "data_product", ContractField::DataProduct),
+    ("tags", "contract_tags", ContractField::ContractTags),
+    ("team.name", "team_name", ContractField::TeamName),
+    (
+        "team.members.username",
+        "team_members_username",
+        ContractField::TeamMembersUsername,
+    ),
+    (
+        "team.members.role",
+        "team_members_role",
+        ContractField::TeamMembersRole,
+    ),
+    ("schema.name", "schema_name", ContractField::SchemaName),
+    (
+        "schema.physicalType",
+        "schema_physical_type",
+        ContractField::SchemaPhysicalType,
+    ),
+    ("schema.tags", "schema_tags", ContractField::SchemaTags),
+    (
+        "schema.properties.logicalType",
+        "property_logical_type",
+        ContractField::PropertyLogicalType,
+    ),
+    (
+        "schema.properties.physicalType",
+        "property_physical_type",
+        ContractField::PropertyPhysicalType,
+    ),
+    (
+        "schema.properties.classification",
+        "property_classification",
+        ContractField::PropertyClassification,
+    ),
+    (
+        "schema.properties.tags",
+        "property_tags",
+        ContractField::PropertyTags,
+    ),
+];
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum FieldSpec {
+    Name(String),
+    Keyed(BTreeMap<String, String>),
+}
+
+impl TryFrom<FieldSpec> for ContractField {
+    type Error = String;
+
+    fn try_from(spec: FieldSpec) -> Result<Self, Self::Error> {
+        match spec {
+            FieldSpec::Name(name) => lookup(&name, &NAMED_FIELDS, "field"),
+            FieldSpec::Keyed(map) => match map.into_iter().collect::<Vec<_>>().as_slice() {
+                [(key, property)] if CUSTOM_PROPERTY_KEYS.contains(&key.as_str()) => {
+                    Ok(Self::CustomProperty(property.clone()))
+                }
+                _ => {
+                    Err("a keyed field must look like `{customProperties: <property>}`".to_string())
+                }
+            },
+        }
+    }
 }
 
 impl ContractField {
@@ -277,6 +341,21 @@ team:
             ));
             assert_eq!(format!("{by_path:?}"), format!("{by_name:?}"), "{odcs}");
         }
+    }
+
+    #[test]
+    fn unknown_field_suggests_the_closest_name() {
+        let error = serde_json::from_value::<crate::rules::RuleKind>(serde_json::json!(
+            {"type": "allowed_values", "field": "domian", "values": ["x"]}
+        ))
+        .unwrap_err()
+        .to_string();
+        assert!(
+            error.starts_with(
+                "unknown field `domian`; did you mean `domain`? Expected one of `apiVersion`"
+            ),
+            "{error}"
+        );
     }
 
     #[test]

@@ -89,6 +89,25 @@ fn invalid_config_exits_two() {
 }
 
 #[test]
+fn config_error_names_rule_line_and_suggestion() {
+    let directory = workspace(&[
+        ("a.odcs.yaml", VALID_CONTRACT),
+        (
+            "odcslint.yml",
+            "rules:\n  - type: allowed_values\n    field: domain\n    valuse: [sales]\n",
+        ),
+    ]);
+    odcslint(directory.path())
+        .arg("check")
+        .assert()
+        .code(2)
+        .stderr(predicate::str::contains(
+            "odcslint.yml:4:5: rules[0] (allowed_values): unknown field `valuse`",
+        ))
+        .stderr(predicate::str::contains("did you mean `values`?"));
+}
+
+#[test]
 fn configured_rule_reports_findings() {
     let directory = workspace(&[
         ("a.odcs.yaml", &format!("{VALID_CONTRACT}domain: hr\n")),

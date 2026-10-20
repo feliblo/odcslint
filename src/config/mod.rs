@@ -1,5 +1,7 @@
 mod load;
+mod parse;
 pub mod pattern;
+pub mod suggest;
 
 use std::path::{Component, Path, PathBuf};
 
@@ -28,14 +30,6 @@ pub struct Config {
 impl Config {
     pub fn match_path(&self, path: &Path) -> String {
         relative_path(&self.root, path)
-    }
-
-    pub fn validate(&self) -> Result<(), String> {
-        self.rules.iter().try_for_each(|rule| {
-            rule.kind
-                .validate()
-                .map_err(|message| format!("rule `{}`: {message}", rule.display_name()))
-        })
     }
 }
 
