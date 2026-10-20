@@ -166,7 +166,7 @@ pub fn check(options: &NamingConvention, context: &Context<'_>) -> Vec<Violation
 
 #[cfg(test)]
 mod tests {
-    use crate::rules::test_support::{messages, rule};
+    use crate::rules::test_support::{assert_passes, messages, rule};
 
     const CONTRACT: &str = "\
 schema:
@@ -201,7 +201,7 @@ schema:
     #[test]
     fn pascal_case_schema_names() {
         let kind = rule("type: naming_convention\ntarget: schema_name\nconvention: pascal_case\n");
-        assert!(messages(&kind, CONTRACT).is_empty());
+        assert_passes(&kind, CONTRACT);
     }
 
     #[test]

@@ -234,9 +234,10 @@ mod tests {
 
     #[test]
     fn valid_contract_has_no_findings() {
-        assert!(lint(VALID, &Config::default(), "c.odcs.yaml")
-            .unwrap()
-            .is_empty());
+        assert_eq!(
+            lint(VALID, &Config::default(), "c.odcs.yaml").unwrap(),
+            Vec::<Finding>::new()
+        );
     }
 
     #[test]
@@ -267,15 +268,16 @@ mod tests {
         assert!(findings
             .iter()
             .all(|finding| finding.severity == Severity::Warning));
-        assert!(!findings.is_empty());
+        assert!(!findings.is_empty(), "{findings:?}");
     }
 
     #[test]
     fn schema_validation_can_be_disabled() {
         let config = config("settings:\n  schema_validation: off\n");
-        assert!(lint("apiVersion: v3.2.0\n", &config, "c.odcs.yaml")
-            .unwrap()
-            .is_empty());
+        assert_eq!(
+            lint("apiVersion: v3.2.0\n", &config, "c.odcs.yaml").unwrap(),
+            Vec::<Finding>::new()
+        );
     }
 
     #[test]
@@ -294,9 +296,10 @@ mod tests {
     fn rule_excludes_skip_files() {
         let config = config("rules:\n  - type: id_format\n    excludes: ['legacy/**']\n");
         let source = VALID.replace("53581432-6c55-4ba2-a65f-72344a91553c", "orders");
-        assert!(lint(&source, &config, "legacy/c.odcs.yaml")
-            .unwrap()
-            .is_empty());
+        assert_eq!(
+            lint(&source, &config, "legacy/c.odcs.yaml").unwrap(),
+            Vec::<Finding>::new()
+        );
     }
 
     const UNORDERED: &str = "\
@@ -364,7 +367,7 @@ schema:
             config("settings:\n  schema_validation: off\nrules:\n  - type: property_order\n");
         let reports = check_files(&[&path], &config, true).unwrap();
         assert_eq!(reports[0].fixes_applied, 2);
-        assert!(reports[0].findings.is_empty());
+        assert_eq!(reports[0].findings, Vec::<Finding>::new());
         assert!(fs::read_to_string(&path)
             .unwrap()
             .contains("      - name: id\n"));

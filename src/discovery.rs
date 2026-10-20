@@ -207,7 +207,7 @@ mod tests {
             &["**/sandbox/**"],
             true,
         );
-        assert!(found.is_empty());
+        assert_eq!(found, Vec::<String>::new());
     }
 
     #[test]

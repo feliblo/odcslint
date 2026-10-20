@@ -310,7 +310,7 @@ fn targets<'a>(options: &AllowedValues, context: &Context<'a>) -> Vec<Target<'a>
 mod tests {
     use super::*;
     use crate::diagnostic::Location;
-    use crate::rules::test_support::{messages, parse_rule, rule, violations_at};
+    use crate::rules::test_support::{assert_passes, messages, parse_rule, rule, violations_at};
 
     const TEAM: &str = "\
 team:
@@ -361,7 +361,7 @@ team:
     #[test]
     fn allows_listed_owner() {
         let kind = rule("type: allowed_values\nfield: team_members_username\nrole: owner\nvalues: [alice, mallory]\n");
-        assert!(messages(&kind, TEAM).is_empty());
+        assert_passes(&kind, TEAM);
     }
 
     #[test]
@@ -414,7 +414,7 @@ team:
     #[test]
     fn missing_optional_field_is_fine() {
         let kind = rule("type: allowed_values\nfield: domain\nvalues: [sales]\n");
-        assert!(messages(&kind, "name: x\n").is_empty());
+        assert_passes(&kind, "name: x\n");
     }
 
     #[test]
@@ -439,7 +439,7 @@ team:
     fn case_insensitive_comparison() {
         let kind =
             rule("type: allowed_values\nfield: status\nvalues: [active]\ncase_sensitive: false\n");
-        assert!(messages(&kind, "status: ACTIVE\n").is_empty());
+        assert_passes(&kind, "status: ACTIVE\n");
     }
 
     #[test]

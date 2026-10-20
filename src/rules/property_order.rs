@@ -122,7 +122,7 @@ fn check_list(
 #[cfg(test)]
 mod tests {
     use crate::diagnostic::Location;
-    use crate::rules::test_support::{messages, rule, violations_at};
+    use crate::rules::test_support::{assert_passes, messages, rule, violations_at};
 
     fn contract(properties: &str) -> String {
         format!("schema:\n  - name: orders\n    properties:\n{properties}")
@@ -133,7 +133,7 @@ mod tests {
     #[test]
     fn accepts_expected_order() {
         let kind = rule("type: property_order\n");
-        assert!(messages(&kind, &contract(ORDERED)).is_empty());
+        assert_passes(&kind, &contract(ORDERED));
     }
 
     #[test]
@@ -168,14 +168,14 @@ mod tests {
         let kind = rule("type: property_order\n");
         let source =
             contract("      - name: _id\n        primaryKey: true\n      - name: amount\n");
-        assert!(messages(&kind, &source).is_empty());
+        assert_passes(&kind, &source);
     }
 
     #[test]
     fn primary_keys_first_can_be_disabled() {
         let kind = rule("type: property_order\nprimary_keys_first: false\n");
         let source = contract("      - name: amount\n      - name: id\n        primaryKey: true\n");
-        assert!(messages(&kind, &source).is_empty());
+        assert_passes(&kind, &source);
     }
 
     #[test]
@@ -197,7 +197,7 @@ mod tests {
         );
         assert_eq!(messages(&kind, &source).len(), 1);
         let kind = rule("type: property_order\nrecursive: false\n");
-        assert!(messages(&kind, &source).is_empty());
+        assert_passes(&kind, &source);
     }
 
     #[test]
