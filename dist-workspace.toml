@@ -27,7 +27,7 @@ install-path = "CARGO_HOME"
 # Local artifacts jobs to run in CI
 local-artifacts-jobs = ["./build-binaries"]
 # Publish jobs to run in CI
-publish-jobs = ["./publish", "homebrew"]
+publish-jobs = ["./publish", "homebrew", "npm"]
 post-announce-jobs = ["./pages"]
 # Custom permissions for GitHub Actions jobs
 github-custom-job-permissions = { "pages" = { contents = "read", pages = "write", id-token = "write" } }
