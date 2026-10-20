@@ -130,6 +130,7 @@ fn check(args: &CheckArgs) -> Result<u8> {
             exclude: &config.settings.exclude,
             force_exclude: args.force_exclude,
             respect_ignore: !args.no_ignore,
+            root: &config.root,
         },
     )?;
     if paths.is_empty() && !args.allow_empty {

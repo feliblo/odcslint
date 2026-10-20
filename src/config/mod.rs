@@ -1,7 +1,7 @@
 mod load;
 pub mod pattern;
 
-use std::path::Path;
+use std::path::{Component, Path, PathBuf};
 
 use serde::Deserialize;
 
@@ -19,9 +19,17 @@ pub struct Config {
     pub settings: Settings,
     #[serde(default)]
     pub rules: Vec<Rule>,
+    /// Directory of the config file. Globs in the config are relative to it, so a config found in
+    /// a parent directory behaves the same no matter where odcslint runs. Empty without a file.
+    #[serde(skip)]
+    pub root: PathBuf,
 }
 
 impl Config {
+    pub fn match_path(&self, path: &Path) -> String {
+        relative_path(&self.root, path)
+    }
+
     pub fn validate(&self) -> Result<(), String> {
         self.rules.iter().try_for_each(|rule| {
             rule.kind
@@ -98,6 +106,40 @@ impl Rule {
     }
 }
 
+/// `path` relative to `root` for glob matching, or the normalized path itself when `root` is
+/// empty or doesn't contain it.
+pub fn relative_path(root: &Path, path: &Path) -> String {
+    if root.as_os_str().is_empty() {
+        return normalize_path(path);
+    }
+    absolute(path)
+        .and_then(|path| path.strip_prefix(root).ok().map(normalize_path))
+        .unwrap_or_else(|| normalize_path(path))
+}
+
+/// Like `std::path::absolute`, but also resolves `..` so paths such as `../contracts` still
+/// strip cleanly against the config root.
+pub fn absolute(path: &Path) -> Option<PathBuf> {
+    let path = if path.as_os_str().is_empty() {
+        Path::new(".")
+    } else {
+        path
+    };
+    let absolute = std::path::absolute(path).ok()?;
+    Some(
+        absolute
+            .components()
+            .fold(PathBuf::new(), |mut resolved, component| {
+                if component == Component::ParentDir {
+                    resolved.pop();
+                } else {
+                    resolved.push(component);
+                }
+                resolved
+            }),
+    )
+}
+
 pub fn normalize_path(path: &Path) -> String {
     let text = path.to_string_lossy().replace('\\', "/");
     text.strip_prefix("./")
@@ -159,6 +201,27 @@ mod tests {
         assert!(rule.applies_to("domains/sales/a.odcs.yaml"));
         assert!(!rule.applies_to("domains/sandbox/a.odcs.yaml"));
         assert!(!rule.applies_to("other/a.odcs.yaml"));
+    }
+
+    #[test]
+    fn relative_path_is_relative_to_root() {
+        let root = absolute(Path::new("project")).unwrap();
+        assert_eq!(
+            relative_path(&root, Path::new("project/sandbox/a.odcs.yaml")),
+            "sandbox/a.odcs.yaml"
+        );
+        assert_eq!(
+            relative_path(&root, Path::new("project/x/../sandbox/a.odcs.yaml")),
+            "sandbox/a.odcs.yaml"
+        );
+    }
+
+    #[test]
+    fn relative_path_without_root_is_normalized_path() {
+        assert_eq!(
+            relative_path(Path::new(""), Path::new("./a/b.yaml")),
+            "a/b.yaml"
+        );
     }
 
     #[test]

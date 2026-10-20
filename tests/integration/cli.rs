@@ -222,6 +222,66 @@ fn init_writes_config_that_check_accepts() {
 }
 
 #[test]
+fn config_in_parent_directory_is_used_from_subdirectory() {
+    let directory = workspace(&[
+        (".git/HEAD", "ref: refs/heads/main\n"),
+        (
+            "contracts/sales/a.odcs.yaml",
+            &format!("{VALID_CONTRACT}domain: hr\n"),
+        ),
+        (
+            "odcslint.yml",
+            "rules:\n  - type: allowed_values\n    field: domain\n    values: [sales]\n",
+        ),
+    ]);
+    odcslint(&directory.path().join("contracts/sales"))
+        .arg("check")
+        .assert()
+        .code(1)
+        .stdout(predicate::str::contains("domain `hr` is not allowed"));
+}
+
+#[test]
+fn globs_in_parent_config_are_relative_to_the_config() {
+    let directory = workspace(&[
+        (".git/HEAD", "ref: refs/heads/main\n"),
+        ("contracts/sandbox/a.odcs.yaml", "apiVersion: v3.1.0\n"),
+        ("contracts/sales/b.odcs.yaml", VALID_CONTRACT),
+        (
+            "odcslint.yml",
+            "settings:\n  exclude: ['contracts/sandbox/**']\n",
+        ),
+    ]);
+    odcslint(&directory.path().join("contracts"))
+        .arg("check")
+        .assert()
+        .code(0)
+        .stdout(predicate::str::contains("1 file checked"));
+    odcslint(&directory.path().join("contracts/sales"))
+        .args([
+            "check",
+            "--force-exclude",
+            "--allow-empty",
+            "../sandbox/a.odcs.yaml",
+        ])
+        .assert()
+        .code(0);
+}
+
+#[test]
+fn output_paths_stay_relative_to_working_directory() {
+    let directory = workspace(&[
+        (".git/HEAD", "ref: refs/heads/main\n"),
+        ("contracts/a.odcs.yaml", "apiVersion: v3.1.0\n"),
+        ("odcslint.yml", ""),
+    ]);
+    odcslint(&directory.path().join("contracts"))
+        .arg("check")
+        .assert()
+        .stdout(predicate::str::starts_with("a.odcs.yaml\n"));
+}
+
+#[test]
 fn rules_lists_rule_types() {
     let directory = workspace(&[]);
     odcslint(directory.path())

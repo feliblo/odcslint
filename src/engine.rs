@@ -42,7 +42,7 @@ fn check_file(path: &Path, config: &Config, fix: bool) -> Result<FileReport> {
         source,
     })?;
     let outcome = if fix {
-        fix_source(&original, config, &display)
+        fix_source(&original, config, &config.match_path(path))
     } else {
         FixOutcome::default()
     };
@@ -50,7 +50,7 @@ fn check_file(path: &Path, config: &Config, fix: bool) -> Result<FileReport> {
         write_atomically(path, fixed)?;
     }
     let source = outcome.source.as_deref().unwrap_or(&original);
-    let mut findings = lint(source, config, &display)?;
+    let mut findings = lint(source, config, &config.match_path(path))?;
     findings.extend(outcome.failure);
     findings.sort_by(|left, right| {
         (left.location, &left.name, &left.message).cmp(&(
