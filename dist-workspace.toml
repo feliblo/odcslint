@@ -8,7 +8,7 @@ cargo-dist-version = "0.30.2"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
-installers = ["shell", "powershell", "npm", "homebrew"]
+installers = ["shell", "powershell", "homebrew"]
 # A GitHub repo to push Homebrew formulas to
 tap = "feliblo/homebrew-tap"
 formula = "odcslint"
@@ -20,14 +20,12 @@ targets = [
     "x86_64-unknown-linux-gnu",
     "x86_64-pc-windows-msvc",
 ]
-# A namespace to use when publishing this package to the npm registry
-npm-scope = "@feliblo"
 # Path that installers should place binaries in
 install-path = "CARGO_HOME"
 # Local artifacts jobs to run in CI
 local-artifacts-jobs = ["./build-binaries"]
 # Publish jobs to run in CI
-publish-jobs = ["./publish", "homebrew", "npm"]
+publish-jobs = ["./publish", "homebrew"]
 post-announce-jobs = ["./pages"]
 # Custom permissions for GitHub Actions jobs
 github-custom-job-permissions = { "pages" = { contents = "read", pages = "write", id-token = "write" } }

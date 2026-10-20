@@ -28,7 +28,6 @@ Checking 10,000 contracts takes 0.4 s. For a comparison with `datacontract lint`
 ```bash
 pip install odcslint                 # or: uv tool install odcslint
 brew install feliblo/tap/odcslint
-npm install -g @feliblo/odcslint
 curl -LsSf https://github.com/feliblo/odcslint/releases/latest/download/odcslint-installer.sh | sh
 ```
 
