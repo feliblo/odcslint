@@ -1,0 +1,6 @@
+---
+source: src/report/github.rs
+expression: render(&reports())
+---
+::error file=contracts/orders.odcs.yaml,line=1,col=1,title=odcslint (schema)::"id" is a required property
+::warning file=contracts/orders.odcs.yaml,line=12,col=9,title=odcslint (column_order)::expected `order_id` at position 1 of `orders`, found `_loaded_at`, "quoted"

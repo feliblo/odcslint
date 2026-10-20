@@ -1,0 +1,9 @@
+---
+source: src/report/text.rs
+expression: "render(&reports, &Summary::new(&reports), TextOptions::default())"
+---
+contracts/orders.odcs.yaml
+  1:1   error    schema        "id" is a required property
+  12:9  warning  column_order  expected `order_id` at position 1 of `orders`, found `_loaded_at`, "quoted" [*]
+
+Found 1 error and 1 warning (2 files checked). 1 finding marked [*] can be fixed with `odcslint check --fix`. Applied 1 fix.

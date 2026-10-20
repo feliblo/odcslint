@@ -1,0 +1,7 @@
+---
+source: src/report/structured.rs
+expression: csv(&reports())
+---
+path,line,column,severity,rule,name,message,fixable
+contracts/orders.odcs.yaml,1,1,error,schema,schema,"""id"" is a required property",false
+contracts/orders.odcs.yaml,12,9,warning,property_order,column_order,"expected `order_id` at position 1 of `orders`, found `_loaded_at`, ""quoted""",true

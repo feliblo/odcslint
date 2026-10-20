@@ -1,0 +1,35 @@
+[project]
+name = "odcslint"
+version = "0.1.0"
+description = "A fast linter and fixer for Open Data Contract Standard (ODCS) contracts."
+authors = [{ name = "feliblo", email = "hi@feliblo.dev" }]
+requires-python = ">=3.8"
+keywords = ["odcs", "data-contract", "linter", "yaml", "cli"]
+readme = "README.md"
+license = { file = "LICENSE" }
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Rust",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.urls]
+Repository = "https://github.com/feliblo/odcslint"
+Changelog = "https://github.com/feliblo/odcslint/blob/main/CHANGELOG.md"
+Releases = "https://github.com/feliblo/odcslint/releases"
+Homepage = "https://feliblo.github.io/odcslint/"
+
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[tool.maturin]
+bindings = "bin"
+include = [{ path = "licenses/*", format = ["wheel", "sdist"] }]
+
+[tool.uv]
+managed = false
