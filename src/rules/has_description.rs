@@ -61,7 +61,7 @@ pub fn check(options: &HasDescription, context: &Context<'_>) -> Vec<Violation> 
 
 #[cfg(test)]
 mod tests {
-    use crate::rules::test_support::{messages, rule};
+    use crate::rules::test_support::{assert_passes, messages, rule};
 
     const CONTRACT: &str = "\
 description:
@@ -101,7 +101,7 @@ schema:
     #[test]
     fn contract_scope_uses_purpose() {
         let kind = rule("type: has_description\nscope: contract\n");
-        assert!(messages(&kind, CONTRACT).is_empty());
+        assert_passes(&kind, CONTRACT);
         assert_eq!(
             messages(&kind, "name: x\n"),
             vec!["contract has no description"]
@@ -111,6 +111,6 @@ schema:
     #[test]
     fn schema_scope() {
         let kind = rule("type: has_description\nscope: schema\n");
-        assert!(messages(&kind, CONTRACT).is_empty());
+        assert_passes(&kind, CONTRACT);
     }
 }

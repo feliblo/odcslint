@@ -58,12 +58,12 @@ pub fn check(options: &RequiredFields, context: &Context<'_>) -> Vec<Violation> 
 
 #[cfg(test)]
 mod tests {
-    use crate::rules::test_support::{messages, rule};
+    use crate::rules::test_support::{assert_passes, messages, rule};
 
     #[test]
     fn accepts_present_fields() {
         let kind = rule("type: required_fields\nfields: [domain, description.purpose]\n");
-        assert!(messages(&kind, "domain: sales\ndescription:\n  purpose: Orders\n").is_empty());
+        assert_passes(&kind, "domain: sales\ndescription:\n  purpose: Orders\n");
     }
 
     #[test]

@@ -79,7 +79,7 @@ pub fn check(options: &RequiredTags, context: &Context<'_>) -> Vec<Violation> {
 
 #[cfg(test)]
 mod tests {
-    use crate::rules::test_support::{messages, rule};
+    use crate::rules::test_support::{assert_passes, messages, rule};
 
     #[test]
     fn all_tags_required() {
@@ -93,7 +93,7 @@ mod tests {
     #[test]
     fn any_tag_suffices() {
         let kind = rule("type: required_tags\ntags: [gold, silver]\ncriteria: any\n");
-        assert!(messages(&kind, "tags: [silver]\n").is_empty());
+        assert_passes(&kind, "tags: [silver]\n");
         assert_eq!(
             messages(&kind, "tags: [bronze]\n"),
             vec!["contract needs at least one of the tags: gold, silver"]

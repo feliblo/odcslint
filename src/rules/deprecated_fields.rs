@@ -42,7 +42,7 @@ pub fn check(_options: &DeprecatedFields, context: &Context<'_>) -> Vec<Violatio
 
 #[cfg(test)]
 mod tests {
-    use crate::rules::test_support::{messages, rule};
+    use crate::rules::test_support::{assert_passes, messages, rule};
 
     #[test]
     fn reports_deprecated_keys() {
@@ -68,6 +68,6 @@ mod tests {
     #[test]
     fn accepts_team_object() {
         let kind = rule("type: deprecated_fields\n");
-        assert!(messages(&kind, "team:\n  members:\n    - username: a\n").is_empty());
+        assert_passes(&kind, "team:\n  members:\n    - username: a\n");
     }
 }

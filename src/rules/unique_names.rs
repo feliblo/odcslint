@@ -81,7 +81,7 @@ pub fn check(options: &UniqueNames, context: &Context<'_>) -> Vec<Violation> {
 
 #[cfg(test)]
 mod tests {
-    use crate::rules::test_support::{messages, rule};
+    use crate::rules::test_support::{assert_passes, messages, rule};
 
     #[test]
     fn reports_duplicate_property_names_case_insensitively() {
@@ -99,14 +99,14 @@ mod tests {
         let kind = rule("type: unique_names\nscope: property\ncase_sensitive: true\n");
         let contract =
             "schema:\n  - name: t\n    properties:\n      - name: id\n      - name: ID\n";
-        assert!(messages(&kind, contract).is_empty());
+        assert_passes(&kind, contract);
     }
 
     #[test]
     fn same_name_in_different_lists_is_fine() {
         let kind = rule("type: unique_names\nscope: property\n");
         let contract = "schema:\n  - name: a\n    properties:\n      - name: id\n  - name: b\n    properties:\n      - name: id\n";
-        assert!(messages(&kind, contract).is_empty());
+        assert_passes(&kind, contract);
     }
 
     #[test]

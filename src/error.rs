@@ -1,4 +1,6 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
+use crate::diagnostic::Location;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -14,8 +16,12 @@ pub enum Error {
         source: std::io::Error,
     },
 
-    #[error("invalid config `{path}`: {message}")]
-    Config { path: PathBuf, message: String },
+    #[error("invalid config {}: {message}", position(.path, *.location))]
+    Config {
+        path: PathBuf,
+        location: Option<Location>,
+        message: String,
+    },
 
     #[error("path `{0}` does not exist")]
     PathNotFound(PathBuf),
@@ -40,3 +46,10 @@ pub enum Error {
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
+
+fn position(path: &Path, location: Option<Location>) -> String {
+    location.map_or_else(
+        || path.display().to_string(),
+        |location| format!("{}:{}:{}", path.display(), location.line, location.column),
+    )
+}

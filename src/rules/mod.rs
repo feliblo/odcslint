@@ -203,6 +203,10 @@ pub mod test_support {
         check(kind, &Context::new(&document, path))
     }
 
+    pub fn assert_passes(kind: &RuleKind, contract: &str) {
+        assert_eq!(messages(kind, contract), Vec::<String>::new());
+    }
+
     pub fn messages(kind: &RuleKind, contract: &str) -> Vec<String> {
         violations_at(kind, contract, "contract.odcs.yaml")
             .into_iter()

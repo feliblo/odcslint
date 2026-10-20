@@ -1,13 +1,13 @@
 # Configuration
 
-odcslint looks for a config file in the directory you run it from and uses the first one it finds, in this order:
+odcslint looks for a config file in the directory you run it from, then in each parent directory up to the root of your git repository. It uses the nearest directory that has one. Within a directory, it picks the first of these:
 
 1. `odcslint.yml`
 2. `odcslint.yaml`
 3. `odcslint.toml`
 4. `pyproject.toml`, if it has a `[tool.odcslint]` section
 
-Pass `--config <FILE>` to use a specific file instead. Without a config file, odcslint only runs [schema validation](schema-validation.md). Rules stay off until you list them.
+Outside a git repository, only the current directory is searched. Pass `--config <FILE>` to use a specific file instead. Without a config file, odcslint only runs [schema validation](schema-validation.md). Rules stay off until you list them.
 
 ## Structure
 
@@ -78,7 +78,7 @@ Pass `--config <FILE>` to use a specific file instead. Without a config file, od
 | `exclude` | `[]` | Globs to skip when walking. With `--force-exclude`, also applied to files passed explicitly. |
 | `schema_validation` | `error` | Severity of [schema findings](schema-validation.md), or `off`. |
 
-Globs are matched against paths relative to the working directory, with `/` as the separator. `*` stays within one directory, while `**` matches across directories.
+Globs in the config, including a rule's `includes` and `excludes`, are matched against paths relative to the directory that contains the config file, with `/` as the separator. That way a config at the repository root behaves the same when you run odcslint from a subdirectory. `*` stays within one directory, while `**` matches across directories.
 
 ## `rules`
 
@@ -95,4 +95,8 @@ Globs are matched against paths relative to the working directory, with `/` as t
 
 You can list the same rule type more than once, for example with different values, a different `name`, or different `includes` and `excludes`.
 
-odcslint rejects unknown keys and invalid regexes or globs. It prints a message naming the problem and exits with code `2`.
+odcslint rejects unknown keys, unknown rule types and invalid regexes or globs, and exits with code `2`. The error names the file, line and rule, and suggests the closest valid name when you made a typo:
+
+```text
+error: invalid config odcslint.yml:4:5: rules[0] (allowed_values): unknown field `valuse`, expected one of `field`, `values`, `pattern`, `role`, `required`, `case_sensitive`; did you mean `values`?
+```
