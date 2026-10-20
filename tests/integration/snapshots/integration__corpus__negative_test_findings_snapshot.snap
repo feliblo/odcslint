@@ -1,0 +1,140 @@
+---
+source: tests/integration/corpus.rs
+expression: output
+---
+tests/fixtures/upstream/negative-tests/additional-unknown-property.odcs.yaml
+  9:1  error    schema  unexpected property `unknownRootField`
+
+tests/fixtures/upstream/negative-tests/btrieve-missing-host.odcs.yaml
+  15:5  error    schema  servers[0]: missing required property `host`
+
+tests/fixtures/upstream/negative-tests/deprecated-wrong-type.odcs.yaml
+  18:9  error    schema  deprecated: expected boolean, found `maybe`
+
+tests/fixtures/upstream/negative-tests/enum-duplicate-values.odcs.yaml
+  15:9  error    schema  enum: value has non-unique elements
+
+tests/fixtures/upstream/negative-tests/enum-empty.odcs.yaml
+  15:9  error    schema  enum: value has less than 1 item
+
+tests/fixtures/upstream/negative-tests/enum-missing-value.odcs.yaml
+  16:13  error    schema  enum[0]: missing required property `value`
+
+tests/fixtures/upstream/negative-tests/exasol-missing-host.odcs.yaml
+  13:5  error    schema  servers[0]: missing required property `host`
+
+tests/fixtures/upstream/negative-tests/fastobjects-missing-database.odcs.yaml
+  15:5  error    schema  servers[0]: missing required property `database`
+
+tests/fixtures/upstream/negative-tests/hana-missing-host.odcs.yaml
+  13:5  error    schema  servers[0]: missing required property `host`
+
+tests/fixtures/upstream/negative-tests/iceberg-missing-catalogurl.odcs.yaml
+  14:5  error    schema  servers[0]: missing required property `catalogUrl`
+
+tests/fixtures/upstream/negative-tests/ingres-missing-host.odcs.yaml
+  13:5  error    schema  servers[0]: missing required property `host`
+
+tests/fixtures/upstream/negative-tests/invalid-api-version.odcs.yaml
+  5:13  error    unsupported_api_version  apiVersion `v4.0.0` is not supported; supported versions: v3.0.0, v3.0.1, v3.0.2, v3.1.0, v3.2.0
+
+tests/fixtures/upstream/negative-tests/invalid-kind.odcs.yaml
+  6:1  error    schema  kind: `DataModel` is not one of: DataContract
+
+tests/fixtures/upstream/negative-tests/invalid-quality-dimension.odcs.yaml
+  20:13  error    schema  dimension: `validity` is not one of: accuracy, completeness, conformity, consistency, coverage, timeliness, uniqueness
+
+tests/fixtures/upstream/negative-tests/invalid-quality-metric.odcs.yaml
+  17:13  error    schema  metric: `invalidMetric` is not one of: nullValues, missingValues, invalidValues, duplicateValues, rowCount
+
+tests/fixtures/upstream/negative-tests/invalid-quality-type.odcs.yaml
+  17:13  error    schema  type: `unknown` is not one of: text, library, sql, custom
+
+tests/fixtures/upstream/negative-tests/map-missing-block.odcs.yaml
+  13:9  error    schema  properties[0]: missing required property `map`
+
+tests/fixtures/upstream/negative-tests/map-missing-key.odcs.yaml
+  15:9  error    schema  map: missing required property `key`
+
+tests/fixtures/upstream/negative-tests/map-missing-value.odcs.yaml
+  15:9  error    schema  map: missing required property `value`
+
+tests/fixtures/upstream/negative-tests/missing-required-fields.odcs.yaml
+  4:1  error    schema  missing required property `id`
+
+tests/fixtures/upstream/negative-tests/quality-custom-missing-implementation.odcs.yaml
+  17:13  error    schema  quality[0]: missing required property `implementation`
+
+tests/fixtures/upstream/negative-tests/quality-element-field.odcs.yaml
+  18:13  error    schema  quality[0]: unexpected property `element`, unexpected property `rule`
+
+tests/fixtures/upstream/negative-tests/quality-library-missing-metric.odcs.yaml
+  17:13  error    schema  quality[0]: missing required property `metric`
+
+tests/fixtures/upstream/negative-tests/quality-multiple-operators.odcs.yaml
+  17:13  error    schema  quality[0]: value is valid under more than one of the schemas listed in the 'oneOf' keyword
+
+tests/fixtures/upstream/negative-tests/quality-mustbebetween-wrong-size.odcs.yaml
+  13:9  error    schema  quality[0]: value is not valid under any of the schemas listed in the 'oneOf' keyword
+
+tests/fixtures/upstream/negative-tests/quality-sql-missing-query.odcs.yaml
+  17:13  error    schema  quality[0]: missing required property `query`
+
+tests/fixtures/upstream/negative-tests/relationship-property-level-with-from.odcs.yaml
+  17:13  error    schema  relationships[0]: {"required":["from"]} is not allowed for value
+
+tests/fixtures/upstream/negative-tests/relationship-schema-level-missing-from-to.odcs.yaml
+  13:9  error    schema  relationships[0]: missing required property `from`
+  13:9  error    schema  relationships[0]: missing required property `to`
+  13:9  error    schema  relationships[0]: value is valid under more than one of the schemas listed in the 'oneOf' keyword
+
+tests/fixtures/upstream/negative-tests/schema-property-invalid-logicaltype.odcs.yaml
+  14:9  error    schema  logicalType: `binary` is not one of: string, date, timestamp, time, number, integer, object, array, boolean, map, vector
+
+tests/fixtures/upstream/negative-tests/schema-property-missing-name.odcs.yaml
+  13:9  error    schema  properties[0]: missing required property `name`
+
+tests/fixtures/upstream/negative-tests/server-encoding-wrong-type.odcs.yaml
+  17:5  error    schema  encoding: expected string, found `65001`
+
+tests/fixtures/upstream/negative-tests/server-invalid-type.odcs.yaml
+  11:5  error    schema  type: `mongodb` is not one of: api, athena, azure, bigquery, btrieve, clickhouse, databricks, denodo, dremio, duckdb, ... (44 total)
+
+tests/fixtures/upstream/negative-tests/server-missing-conditional-fields.odcs.yaml
+  10:5  error    schema  servers[0]: missing required property `schema`
+
+tests/fixtures/upstream/negative-tests/server-missing-required-fields.odcs.yaml
+  10:5  error    schema  servers[0]: missing required property `server`
+  10:5  error    schema  servers[0]: missing required property `type`
+
+tests/fixtures/upstream/negative-tests/sla-authoritativedefinition-missing-type.odcs.yaml
+  19:9  error    schema  authoritativeDefinitions[0]: missing required property `type`
+
+tests/fixtures/upstream/negative-tests/sla-missing-required-value.odcs.yaml
+  10:5  error    schema  slaProperties[0]: missing required property `value`
+
+tests/fixtures/upstream/negative-tests/stable-id-denied-characters.odcs.yaml
+  14:5  error    schema  id: "fdir.dataset" does not match "^[^\s.#/\\@!%&^]+$"
+
+tests/fixtures/upstream/negative-tests/synonym-missing-term.odcs.yaml
+  18:13  error    schema  synonyms[0]: missing required property `synonym`
+
+tests/fixtures/upstream/negative-tests/teradata-missing-host.odcs.yaml
+  13:5  error    schema  servers[0]: missing required property `host`
+
+tests/fixtures/upstream/negative-tests/variables-in-integer-field.odcs.yaml
+  31:9  error    schema  primaryKeyPosition: expected integer, found `${KEY_POS}`
+
+tests/fixtures/upstream/negative-tests/vector-missing-dimensions.odcs.yaml
+  18:9  error    schema  logicalTypeOptions: missing required property `dimensions`
+
+tests/fixtures/upstream/negative-tests/vectorwise-missing-database.odcs.yaml
+  13:5  error    schema  servers[0]: missing required property `database`
+
+tests/fixtures/upstream/negative-tests/vendor-wrong-type.odcs.yaml
+  15:5  error    schema  vendor: expected string, found `12345`
+
+tests/fixtures/upstream/negative-tests/versant-missing-database.odcs.yaml
+  14:5  error    schema  servers[0]: missing required property `database`
+
+Found 47 errors and 0 warnings (44 files checked).

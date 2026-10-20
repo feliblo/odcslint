@@ -1,0 +1,91 @@
+[project]
+site_name = "odcslint"
+site_description = "A fast linter and fixer for Open Data Contract Standard (ODCS) contracts"
+site_url = "https://feliblo.github.io/odcslint/"
+repo_url = "https://github.com/feliblo/odcslint"
+repo_name = "feliblo/odcslint"
+edit_uri = "edit/main/docs/"
+copyright = "Copyright &copy; 2026 feliblo"
+exclude_docs = "AGENTS.md"
+extra_css = ["stylesheets/extra.css"]
+nav = [
+  { "Home" = "index.md" },
+  { "Getting started" = [
+    "installation.md",
+    "usage.md",
+    "configuration.md",
+  ] },
+  { "Checks" = [
+    "schema-validation.md",
+    "autofix.md",
+    { "Rules" = [
+      "rules/index.md",
+      "rules/allowed_values.md",
+      "rules/deprecated_fields.md",
+      "rules/file_naming.md",
+      "rules/has_description.md",
+      "rules/id_format.md",
+      "rules/naming_convention.md",
+      "rules/primary_key.md",
+      "rules/property_order.md",
+      "rules/required_fields.md",
+      "rules/required_tags.md",
+      "rules/unique_names.md",
+    ] },
+  ] },
+  { "Integrations" = [
+    "integrations/prek.md",
+    "integrations/github-action.md",
+  ] },
+  { "Performance" = "performance.md" },
+  { "Contributing" = "contributing.md" },
+]
+
+[project.theme]
+language = "en"
+features = [
+  "content.action.edit",
+  "content.code.annotate",
+  "content.code.copy",
+  "content.tabs.link",
+  "navigation.footer",
+  "navigation.indexes",
+  "navigation.instant",
+  "navigation.path",
+  "navigation.sections",
+  "navigation.top",
+  "navigation.tracking",
+  "search.highlight",
+]
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme)"
+toggle.icon = "lucide/sun-moon"
+toggle.name = "Switch to light mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to system preference"
+
+[project.markdown_extensions]
+admonition = {}
+attr_list = {}
+def_list = {}
+md_in_html = {}
+toc.permalink = true
+pymdownx.details = {}
+pymdownx.emoji.emoji_generator = "zensical.extensions.emoji.to_svg"
+pymdownx.emoji.emoji_index = "zensical.extensions.emoji.twemoji"
+pymdownx.highlight.anchor_linenums = true
+pymdownx.inlinehilite = {}
+pymdownx.superfences = {}
+pymdownx.tabbed.alternate_style = true
+pymdownx.tabbed.combine_header_slug = true

@@ -1,0 +1,17 @@
+- id: odcslint
+  name: odcslint check
+  description: Validate ODCS data contracts against the schema and configured rules.
+  entry: odcslint check --force-exclude --allow-empty
+  language: rust
+  files: \.odcs\.ya?ml$
+  pass_filenames: true
+  require_serial: true
+
+- id: odcslint-fix
+  name: odcslint fix
+  description: Validate ODCS data contracts and apply fixes in place.
+  entry: odcslint check --fix --force-exclude --allow-empty
+  language: rust
+  files: \.odcs\.ya?ml$
+  pass_filenames: true
+  require_serial: true

@@ -1,0 +1,41 @@
+# Orders contract owned by the sales domain.
+apiVersion: v3.1.0
+kind: DataContract
+id: 53581432-6c55-4ba2-a65f-72344a91553c
+version: 1.0.0
+status: active
+name: orders
+schema:
+  - name: orders
+    physicalType: table
+    properties:
+      - name: order_id
+        logicalType: string
+        primaryKey: true
+        primaryKeyPosition: 1
+
+      - name: line_number # second part of the key
+        logicalType: integer
+        primaryKey: true
+        primaryKeyPosition: 2
+      - name: amount
+        logicalType: number
+        description: >
+          Total order amount in EUR,
+          including VAT.
+      - name: shipping_address
+        logicalType: object
+        properties:
+          - name: street
+            logicalType: string
+          - name: city
+            logicalType: string
+          - name: _source_hash
+            logicalType: string
+      # Load metadata, added by the ingestion framework.
+      - name: _loaded_at
+        logicalType: timestamp
+        physicalType: timestamp_ntz
+    # Columns end here.
+  - name: customers
+    properties: [{name: _etl_batch}, {name: customer_id}]

@@ -1,0 +1,42 @@
+# Checks the vendored ODCS schemas against upstream: weekly, on demand, and on PRs that touch them.
+name: Schema drift
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "schemas/**"
+      - "src/schema/**"
+      - "scripts/check_schema_versions.py"
+      - ".github/workflows/schema-drift.yml"
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check for missing schema versions
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/check_schema_versions.py main
+
+      - name: Compare vendored schemas with upstream
+        if: ${{ !cancelled() }}
+        run: |
+          base=https://raw.githubusercontent.com/bitol-io/open-data-contract-standard/main/schema
+          status=0
+          for file in schemas/odcs/*.json; do
+            name=$(basename "$file")
+            if curl -sfL "$base/$name" -o "/tmp/$name"; then
+              if ! diff -q "$file" "/tmp/$name" > /dev/null; then
+                echo "::warning file=$file::$name differs from upstream main"
+                status=1
+              fi
+            else
+              echo "::notice file=$file::$name not found on upstream main"
+            fi
+          done
+          exit $status

@@ -1,0 +1,63 @@
+name: "odcslint"
+description: "Lint Open Data Contract Standard (ODCS) contracts: schema validation and custom rules."
+branding:
+  icon: "check-square"
+  color: "blue"
+inputs:
+  paths:
+    default: "."
+    description: "Space-separated files, directories or glob patterns to check."
+    required: false
+  config-file:
+    default: ""
+    description: "Config file. Discovered in the working directory when empty."
+    required: false
+  output-format:
+    default: "github"
+    description: "Output format: text, json, ndjson, csv or github."
+    required: false
+  output-file:
+    default: ""
+    description: "Write output to a file instead of stdout."
+    required: false
+  args:
+    default: ""
+    description: "Extra arguments for `odcslint check`."
+    required: false
+  version:
+    default: "latest"
+    description: "Version of odcslint to install (e.g. 'v0.1.0' or 'latest')."
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Install odcslint
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+      run: |
+        if [[ "$VERSION" == "latest" ]]; then
+          url="https://github.com/feliblo/odcslint/releases/latest/download/odcslint-installer.sh"
+        else
+          url="https://github.com/feliblo/odcslint/releases/download/${VERSION}/odcslint-installer.sh"
+        fi
+        curl --proto '=https' --tlsv1.2 -LsSf "$url" | sh
+        echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+    - name: Run odcslint
+      shell: bash
+      env:
+        PATHS: ${{ inputs.paths }}
+        CONFIG_FILE: ${{ inputs.config-file }}
+        OUTPUT_FORMAT: ${{ inputs.output-format }}
+        OUTPUT_FILE: ${{ inputs.output-file }}
+        EXTRA_ARGS: ${{ inputs.args }}
+      run: |
+        args=(check --output-format "$OUTPUT_FORMAT")
+        if [[ -n "$CONFIG_FILE" ]]; then args+=(--config "$CONFIG_FILE"); fi
+        if [[ -n "$OUTPUT_FILE" ]]; then args+=(--output-file "$OUTPUT_FILE"); fi
+        # Word splitting is intended: paths and extra args are space-separated lists.
+        # shellcheck disable=SC2206
+        args+=($EXTRA_ARGS $PATHS)
+        odcslint "${args[@]}"

@@ -1,0 +1,6 @@
+---
+source: src/report/structured.rs
+expression: ndjson(&reports())
+---
+{"path":"contracts/orders.odcs.yaml","line":1,"column":1,"severity":"error","rule":"schema","name":"schema","message":"\"id\" is a required property","fixable":false}
+{"path":"contracts/orders.odcs.yaml","line":12,"column":9,"severity":"warning","rule":"property_order","name":"column_order","message":"expected `order_id` at position 1 of `orders`, found `_loaded_at`, \"quoted\"","fixable":true}
