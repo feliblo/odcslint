@@ -1,6 +1,6 @@
 [project]
 name = "odcslint"
-version = "0.2.0"
+version = "0.3.0"
 description = "A fast linter and fixer for Open Data Contract Standard (ODCS) contracts."
 authors = [{ name = "feliblo", email = "hi@feliblo.dev" }]
 requires-python = ">=3.8"

@@ -1,3 +1,13 @@
+## v0.3.0 (2026-10-22)
+
+### Feat
+
+- **rules**: add aliases such as allowed_domains and allowed_owners for allowed_values - ([c919687](https://github.com/feliblo/odcslint/commit/c919687232bc89f01df0c5a8832586df36e944d7)) - feliblo
+
+### Contributors
+
+[@feliblo](https://github.com/feliblo)
+
 ## v0.2.0 (2026-10-22)
 
 ### Feat
