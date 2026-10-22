@@ -14,7 +14,9 @@ Reports fields that ODCS has deprecated, along with what to use instead:
 
 This rule has no options.
 
-## Examples
+## Example
+
+**Config**
 
 === "YAML"
 
@@ -32,9 +34,17 @@ This rule has no options.
     severity = "warning"
     ```
 
-## Findings
+**Contract**
+
+```yaml title="orders.odcs.yaml"
+team:  # a list of members instead of team.members
+  - username: alice
+    role: owner
+```
+
+**Findings**
 
 ```text
 orders.odcs.yaml
-  12:1  warning  deprecated_fields  `team` as a list is deprecated; use `team.members`
+  1:1  warning  deprecated_fields  `team` as a list is deprecated; use `team.members`
 ```

@@ -9,7 +9,9 @@ The ODCS schema allows duplicate names; this rule doesn't. With `scope: schema` 
 | `scope` | required | `schema` or `property`. |
 | `case_sensitive` | `false` | When `false`, `id` and `ID` are duplicates (most databases treat identifiers this way). |
 
-## Examples
+## Example
+
+**Config**
 
 === "YAML"
 
@@ -29,9 +31,19 @@ The ODCS schema allows duplicate names; this rule doesn't. With `scope: schema` 
     scope = "property"
     ```
 
-## Findings
+**Contract**
+
+```yaml title="orders.odcs.yaml"
+schema:
+  - name: orders
+    properties:
+      - name: id
+      - name: ID  # same name as id, ignoring case
+```
+
+**Findings**
 
 ```text
 orders.odcs.yaml
-  20:15  error    unique_names  duplicate property name `ID`
+  5:15  error    unique_names  duplicate property name `ID`
 ```

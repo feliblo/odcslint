@@ -8,7 +8,9 @@ Checks that the contract `id` is a UUID, or that it matches a regex you choose. 
 |---|---|---|
 | `pattern` | | A regex the id must match. When omitted, the id must be a UUID. |
 
-## Examples
+## Example
+
+**Config**
 
 === "YAML"
 
@@ -27,9 +29,16 @@ Checks that the contract `id` is a UUID, or that it matches a regex you choose. 
     type = "id_format"
     ```
 
-## Findings
+**Contract**
+
+```yaml title="orders.odcs.yaml"
+id: orders  # not a UUID, and not urn:datacontract:...
+```
+
+**Findings**
 
 ```text
 orders.odcs.yaml
-  4:5  error    id_format  contract id `orders` is not a UUID
+  1:5  error    id_format  contract id `orders` is not a UUID
+  1:5  error    urn_ids    contract id `orders` does not match pattern `^urn:datacontract:[a-z]+:[a-z0-9-]+$`
 ```
