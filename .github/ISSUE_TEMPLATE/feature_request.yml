@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest an improvement to odcslint that isn't a rule (CLI, output, config, integrations, ...).
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What are you trying to do, and what gets in the way today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like?
+      description: How it could work, from your side. Commands, config or output are welcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Example
+      description: A contract, config or command that shows the use case.
+      render: yaml
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've tried
