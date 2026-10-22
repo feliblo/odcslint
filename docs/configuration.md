@@ -21,12 +21,10 @@ Outside a git repository, only the current directory is searched. Pass `--config
 
     rules:
       - type: property_order
-      - type: allowed_values
+      - type: allowed_owners
         name: approved_owners
         severity: error
         description: Owners must be on the data governance list.
-        field: team.members.username
-        role: owner
         values: [alice, bob]
         excludes: ["sandbox/**"]
     ```
@@ -43,12 +41,10 @@ Outside a git repository, only the current directory is searched. Pass `--config
     type = "property_order"
 
     [[rules]]
-    type = "allowed_values"
+    type = "allowed_owners"
     name = "approved_owners"
     severity = "error"
     description = "Owners must be on the data governance list."
-    field = "team.members.username"
-    role = "owner"
     values = ["alice", "bob"]
     excludes = ["sandbox/**"]
     ```
@@ -63,10 +59,8 @@ Outside a git repository, only the current directory is searched. Pass `--config
     type = "property_order"
 
     [[tool.odcslint.rules]]
-    type = "allowed_values"
+    type = "allowed_owners"
     name = "approved_owners"
-    field = "team.members.username"
-    role = "owner"
     values = ["alice", "bob"]
     ```
 

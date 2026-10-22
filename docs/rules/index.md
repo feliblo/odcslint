@@ -21,4 +21,6 @@ Rules are off by default. To turn one on, add it to the [`rules`](../configurati
 | [`required_tags`](required_tags.md) | Tags are present |  |
 | [`unique_names`](unique_names.md) | Schema object or property names are unique |  |
 
-`odcslint rules` prints the same list in your terminal.
+`allowed_values` also has [aliases](allowed_values.md#fields) such as `allowed_domains` and `allowed_owners`, which set its `field` for you.
+
+`odcslint rules` prints the same list in your terminal, aliases included.

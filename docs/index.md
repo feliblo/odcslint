@@ -42,9 +42,7 @@ odcslint is a linter for [Open Data Contract Standard (ODCS)](https://bitol-io.g
     Rules turn team conventions into checks: approved owners, known domains, column order, naming, and required descriptions and tags. There are 11 rules to choose from, and you enable them in `odcslint.yml`.
 
     ```yaml
-    - type: allowed_values
-      field: team.members.username
-      role: owner
+    - type: allowed_owners
       values: [alice, bob]
     ```
 
@@ -128,7 +126,7 @@ odcslint is a linter for [Open Data Contract Standard (ODCS)](https://bitol-io.g
 ```console
 $ odcslint check contracts/
 contracts/orders.odcs.yaml
-  13:17  error    approved_owners  team member username `mallory` is not allowed; allowed values: alice, bob
+  13:17  error    allowed_owners   team member username `mallory` is not allowed; allowed values: alice, bob
   20:9   error    property_order   expected `order_id` at position 1 of `orders`, found `_loaded_at` [*]
   40:13  error    property_order   expected `street` at position 1 of `shipping_address`, found `_source_hash` [*]
 

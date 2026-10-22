@@ -83,4 +83,4 @@ odcslint init --location configs/ --force
 
 ## `odcslint rules`
 
-Prints every rule type with a short description and whether `--fix` can fix it.
+Prints every rule type with a short description, marking the ones `--fix` can fix with `[*]`, followed by the [aliases](rules/allowed_values.md#fields) of `allowed_values` and the field each one checks.

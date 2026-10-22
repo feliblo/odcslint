@@ -1,9 +1,11 @@
+use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 
 use serde::de::DeserializeOwned;
+use serde::Deserialize;
 use serde_json::{Map, Value};
 
-use super::suggest::{unknown_name, with_suggestion};
+use super::suggest::{unknown_name, with_suggestion, with_suggestion_among};
 use super::{Config, Settings};
 use crate::config::Rule;
 use crate::constants::PYPROJECT_FILE_NAME;
@@ -12,11 +14,14 @@ use crate::document::node::{entries, entry, scalar_text};
 use crate::document::pointer::resolve;
 use crate::document::to_json::to_json;
 use crate::document::Document;
+use crate::rules::allowed_values::{self, ALIASES};
+use crate::rules::RuleType;
 
 const TOML_EXTENSION: &str = "toml";
 const SETTINGS_KEY: &str = "settings";
 const RULES_KEY: &str = "rules";
 const TYPE_KEY: &str = "type";
+const NAME_KEY: &str = "name";
 const TOP_LEVEL_KEYS: [&str; 2] = [SETTINGS_KEY, RULES_KEY];
 const PYPROJECT_SECTION: [&str; 2] = ["tool", "odcslint"];
 const PYPROJECT_PREFIX: &str = "tool.odcslint.";
@@ -212,11 +217,25 @@ fn from_json(json: &Value, source: &impl Locate) -> Result<Config, Invalid> {
 
 fn parse_rule(index: usize, item: &Value, source: &impl Locate) -> Result<Rule, Invalid> {
     let pointer = format!("/{RULES_KEY}/{index}");
-    let label = item.get(TYPE_KEY).and_then(Value::as_str).map_or_else(
+    let kind = item.get(TYPE_KEY).and_then(Value::as_str);
+    let label = kind.map_or_else(
         || format!("{RULES_KEY}[{index}]"),
         |kind| format!("{RULES_KEY}[{index}] ({kind})"),
     );
-    let rule: Rule = deserialize(item).map_err(|message| {
+    let item = expand_alias(item).map_err(|(message, option)| {
+        Invalid::new(
+            format!("{label}: {message}"),
+            source.locate(&pointer, Some(option)),
+        )
+    })?;
+    let rule = Rule::deserialize(item.as_ref()).map_err(|error| {
+        let error = error.to_string();
+        let aliases: Vec<&str> = if unknown_name(&error) == kind {
+            ALIASES.iter().map(|alias| alias.name).collect()
+        } else {
+            Vec::new()
+        };
+        let message = with_suggestion_among(&error, &aliases);
         let location = source.locate(&pointer, unknown_name(&message));
         Invalid::new(format!("{label}: {message}"), location)
     })?;
@@ -224,6 +243,49 @@ fn parse_rule(index: usize, item: &Value, source: &impl Locate) -> Result<Rule, 
         Invalid::new(format!("{label}: {message}"), source.locate(&pointer, None))
     })?;
     Ok(rule)
+}
+
+/// Rewrites an alias such as `allowed_domains` into the `allowed_values` rule it stands for. The
+/// rule is named after the alias unless it has a `name`; options the alias sets can't be repeated.
+fn expand_alias(item: &Value) -> Result<Cow<'_, Value>, (String, &'static str)> {
+    let alias = item
+        .get(TYPE_KEY)
+        .and_then(Value::as_str)
+        .and_then(allowed_values::alias);
+    match (alias, item.as_object()) {
+        (Some(alias), Some(object)) => {
+            let presets = alias.presets();
+            if let Some((option, _)) = presets
+                .iter()
+                .find(|(option, _)| object.contains_key(*option))
+            {
+                Err((
+                    format!(
+                        "`{option}` is set by `{}`; use `type: {}` to choose it yourself",
+                        alias.name,
+                        RuleType::AllowedValues.name()
+                    ),
+                    *option,
+                ))
+            } else {
+                let mut expanded = object.clone();
+                expanded.insert(
+                    TYPE_KEY.to_string(),
+                    Value::from(RuleType::AllowedValues.name()),
+                );
+                expanded
+                    .entry(NAME_KEY)
+                    .or_insert_with(|| Value::from(alias.name));
+                expanded.extend(
+                    presets
+                        .into_iter()
+                        .map(|(option, value)| (option.to_string(), Value::from(value))),
+                );
+                Ok(Cow::Owned(Value::Object(expanded)))
+            }
+        }
+        _ => Ok(Cow::Borrowed(item)),
+    }
 }
 
 fn deserialize<T: DeserializeOwned>(value: &Value) -> Result<T, String> {
@@ -279,6 +341,75 @@ mod tests {
             .starts_with("rules[0] (allowed_value): unknown variant `allowed_value`"));
         assert!(error.message.ends_with("did you mean `allowed_values`?"));
         assert_eq!(error.location, Some(Location { line: 2, column: 5 }));
+    }
+
+    fn yaml_rule(source: &str) -> Rule {
+        let mut config = parse(Path::new("odcslint.yml"), source).unwrap();
+        config.rules.remove(0)
+    }
+
+    #[test]
+    fn alias_parses_like_its_long_form() {
+        let alias = yaml_rule("rules:\n  - type: allowed_owners\n    values: [alice]\n");
+        let long = yaml_rule(
+            "rules:\n  - type: allowed_values\n    field: team.members.username\n    role: owner\n    values: [alice]\n",
+        );
+        assert_eq!(format!("{:?}", alias.kind), format!("{:?}", long.kind));
+    }
+
+    #[test]
+    fn alias_names_the_rule() {
+        let rule = yaml_rule("rules:\n  - type: allowed_domains\n    values: [sales]\n");
+        assert_eq!(rule.display_name(), "allowed_domains");
+    }
+
+    #[test]
+    fn explicit_name_overrides_the_alias_name() {
+        let rule = yaml_rule(
+            "rules:\n  - type: allowed_domains\n    name: domains\n    values: [sales]\n",
+        );
+        assert_eq!(rule.display_name(), "domains");
+    }
+
+    #[test]
+    fn alias_rejects_the_options_it_sets() {
+        let error =
+            yaml_error("rules:\n  - type: allowed_domains\n    field: status\n    values: [x]\n");
+        assert_eq!(
+            error.message,
+            "rules[0] (allowed_domains): `field` is set by `allowed_domains`; use `type: allowed_values` to choose it yourself"
+        );
+        assert_eq!(error.location, Some(Location { line: 3, column: 5 }));
+    }
+
+    #[test]
+    fn owners_alias_rejects_role() {
+        let error =
+            yaml_error("rules:\n  - type: allowed_owners\n    role: engineer\n    values: [x]\n");
+        assert!(error.message.contains("`role` is set by `allowed_owners`"));
+    }
+
+    #[test]
+    fn members_alias_accepts_role() {
+        let rule =
+            yaml_rule("rules:\n  - type: allowed_members\n    role: engineer\n    values: [x]\n");
+        assert_eq!(rule.display_name(), "allowed_members");
+    }
+
+    #[test]
+    fn suggests_alias_for_misspelled_type() {
+        let error = yaml_error("rules:\n  - type: allowed_domain\n    values: [x]\n");
+        assert!(error.message.ends_with("did you mean `allowed_domains`?"));
+    }
+
+    #[test]
+    fn alias_works_in_toml() {
+        let config = parse(
+            Path::new("odcslint.toml"),
+            "[[rules]]\ntype = \"allowed_domains\"\nvalues = [\"sales\"]\n",
+        )
+        .unwrap();
+        assert_eq!(config.rules[0].display_name(), "allowed_domains");
     }
 
     #[test]
