@@ -126,6 +126,24 @@ fn configured_rule_reports_findings() {
 }
 
 #[test]
+fn alias_rule_reports_findings_under_its_name() {
+    let directory = workspace(&[
+        ("a.odcs.yaml", &format!("{VALID_CONTRACT}domain: hr\n")),
+        (
+            "odcslint.yml",
+            "rules:\n  - type: allowed_domains\n    values: [sales]\n",
+        ),
+    ]);
+    odcslint(directory.path())
+        .arg("check")
+        .assert()
+        .code(1)
+        .stdout(predicate::str::contains(
+            "allowed_domains  domain `hr` is not allowed; allowed values: sales",
+        ));
+}
+
+#[test]
 fn fix_rewrites_file_and_exits_zero() {
     let directory = workspace(&[
         ("orders.odcs.yaml", &fs::read_to_string(format!("{FIXTURES}/fix/orders.in.yaml")).unwrap()),

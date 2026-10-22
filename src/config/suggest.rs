@@ -5,11 +5,21 @@ const DID_YOU_MEAN: &str = "did you mean";
 /// Appends a "did you mean" hint to serde's "unknown field/variant `x`, expected one of ..."
 /// messages when one of the expected names is close to what was typed.
 pub fn with_suggestion(message: &str) -> String {
+    with_suggestion_among(message, &[])
+}
+
+/// Like [`with_suggestion`], but also considers `extra` names that serde doesn't list, such as
+/// rule type aliases.
+pub fn with_suggestion_among(message: &str, extra: &[&str]) -> String {
     if message.contains(DID_YOU_MEAN) {
         return message.to_string();
     }
+    let candidates: Vec<&str> = expected_names(message)
+        .into_iter()
+        .chain(extra.iter().copied())
+        .collect();
     let typed = unknown_name(message);
-    let suggestion = typed.and_then(|typed| closest(typed, &expected_names(message)));
+    let suggestion = typed.and_then(|typed| closest(typed, &candidates));
     suggestion.map_or_else(
         || message.to_string(),
         |suggestion| format!("{message}; {DID_YOU_MEAN} `{suggestion}`?"),
@@ -113,6 +123,17 @@ mod tests {
         assert_eq!(
             with_suggestion("unknown variant `allowed_value`, expected `allowed_values`"),
             "unknown variant `allowed_value`, expected `allowed_values`; did you mean `allowed_values`?"
+        );
+    }
+
+    #[test]
+    fn suggests_extra_names() {
+        assert_eq!(
+            with_suggestion_among(
+                "unknown variant `allowed_domain`, expected `allowed_values`",
+                &["allowed_domains"]
+            ),
+            "unknown variant `allowed_domain`, expected `allowed_values`; did you mean `allowed_domains`?"
         );
     }
 

@@ -133,6 +133,75 @@ impl ContractField {
     const fn is_team_member_field(&self) -> bool {
         matches!(self, Self::TeamMembersRole | Self::TeamMembersUsername)
     }
+
+    /// The ODCS path users write for this field; `None` for custom properties, which need a key.
+    pub fn path(&self) -> Option<&'static str> {
+        NAMED_FIELDS
+            .iter()
+            .find(|(_, _, field)| field == self)
+            .map(|(path, _, _)| *path)
+    }
+}
+
+pub const FIELD_OPTION: &str = "field";
+pub const ROLE_OPTION: &str = "role";
+const OWNER_ROLE: &str = "owner";
+
+/// A rule type that is `allowed_values` with its `field` (and `role`) already set.
+#[derive(Debug)]
+pub struct Alias {
+    pub name: &'static str,
+    pub field: ContractField,
+    pub role: Option<&'static str>,
+}
+
+impl Alias {
+    const fn new(name: &'static str, field: ContractField) -> Self {
+        Self {
+            name,
+            field,
+            role: None,
+        }
+    }
+
+    /// The options this alias sets, as `(option, value)`.
+    pub fn presets(&self) -> Vec<(&'static str, &'static str)> {
+        let field = self.field.path().map(|path| (FIELD_OPTION, path));
+        let role = self.role.map(|role| (ROLE_OPTION, role));
+        field.into_iter().chain(role).collect()
+    }
+}
+
+pub static ALIASES: [Alias; 15] = [
+    Alias::new("allowed_api_versions", ContractField::ApiVersion),
+    Alias::new("allowed_domains", ContractField::Domain),
+    Alias::new("allowed_statuses", ContractField::Status),
+    Alias::new("allowed_tenants", ContractField::Tenant),
+    Alias::new("allowed_data_products", ContractField::DataProduct),
+    Alias::new("allowed_tags", ContractField::ContractTags),
+    Alias::new("allowed_teams", ContractField::TeamName),
+    Alias::new("allowed_members", ContractField::TeamMembersUsername),
+    Alias {
+        name: "allowed_owners",
+        field: ContractField::TeamMembersUsername,
+        role: Some(OWNER_ROLE),
+    },
+    Alias::new("allowed_roles", ContractField::TeamMembersRole),
+    Alias::new("allowed_schema_types", ContractField::SchemaPhysicalType),
+    Alias::new("allowed_logical_types", ContractField::PropertyLogicalType),
+    Alias::new(
+        "allowed_physical_types",
+        ContractField::PropertyPhysicalType,
+    ),
+    Alias::new(
+        "allowed_classifications",
+        ContractField::PropertyClassification,
+    ),
+    Alias::new("allowed_property_tags", ContractField::PropertyTags),
+];
+
+pub fn alias(name: &str) -> Option<&'static Alias> {
+    ALIASES.iter().find(|alias| alias.name == name)
 }
 
 #[derive(Debug, Deserialize)]
@@ -323,6 +392,28 @@ team:
     - username: bob
       role: engineer
 ";
+
+    #[test]
+    fn every_alias_sets_a_named_field() {
+        let unnamed: Vec<&str> = ALIASES
+            .iter()
+            .filter(|alias| alias.field.path().is_none())
+            .map(|alias| alias.name)
+            .collect();
+        assert!(
+            unnamed.is_empty(),
+            "aliases without a field path: {unnamed:?}"
+        );
+    }
+
+    #[test]
+    fn owners_alias_presets_field_and_role() {
+        let owners = alias("allowed_owners").unwrap();
+        assert_eq!(
+            owners.presets(),
+            vec![("field", "team.members.username"), ("role", "owner")]
+        );
+    }
 
     #[test]
     fn accepts_odcs_paths_as_field_names() {

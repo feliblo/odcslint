@@ -112,7 +112,7 @@ odcslint upgrade        # move contracts to the newest ODCS version
 ```console
 $ odcslint check contracts/
 contracts/orders.odcs.yaml
-  13:17  error    approved_owners  team member username `mallory` is not allowed; allowed values: alice, bob
+  13:17  error    allowed_owners   team member username `mallory` is not allowed; allowed values: alice, bob
   20:9   error    property_order   expected `order_id` at position 1 of `orders`, found `_loaded_at` [*]
 
 contracts/payments.odcs.yaml
@@ -126,9 +126,7 @@ Enable rules in `odcslint.yml`:
 ```yaml
 rules:
   - type: property_order          # primary keys first, metadata columns last (fixable)
-  - type: allowed_values
-    field: team.members.username
-    role: owner
+  - type: allowed_owners          # only these people may own a contract
     values: [alice, bob]
 ```
 

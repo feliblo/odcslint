@@ -27,15 +27,11 @@ rules:
     scope: property
 
   # Only approved owners may own a contract.
-  # - type: allowed_values
-  #   name: approved_owners
-  #   field: team.members.username
-  #   role: owner
+  # - type: allowed_owners
   #   values: [alice, bob]
 
   # Only known domains.
-  # - type: allowed_values
-  #   field: domain
+  # - type: allowed_domains
   #   values: [finance, marketing, sales]
   #   required: true
 
@@ -74,10 +70,7 @@ scope = "property"
 
 # Only approved owners may own a contract.
 # [[rules]]
-# type = "allowed_values"
-# name = "approved_owners"
-# field = "team.members.username"
-# role = "owner"
+# type = "allowed_owners"
 # values = ["alice", "bob"]
 
 # [[rules]]

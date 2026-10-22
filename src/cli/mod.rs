@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
+use owo_colors::OwoColorize;
 use strum::IntoEnumIterator;
 
 use crate::config;
@@ -15,7 +16,8 @@ use crate::diagnostic::Severity;
 use crate::discovery::{discover, Discovery};
 use crate::engine::{check_files, FileReport};
 use crate::error::{Error, Result};
-use crate::report::{render, OutputFormat, Summary, TextOptions};
+use crate::report::{render, OutputFormat, Summary, TextOptions, FIXABLE_MARKER};
+use crate::rules::allowed_values::{Alias, ALIASES};
 use crate::rules::RuleType;
 
 const NO_COLOR_ENV: &str = "NO_COLOR";
@@ -140,7 +142,7 @@ pub fn run(cli: &Cli) -> Result<u8> {
         Command::Check(args) => check(args),
         Command::Init(args) => init::run(args),
         Command::Rules => {
-            write_output(None, &rules_table())?;
+            write_output(None, &rules_table(stdout_has_color()))?;
             Ok(exit_code::SUCCESS)
         }
         Command::Upgrade(args) => upgrade::run(args),
@@ -204,9 +206,7 @@ fn check(args: &CheckArgs) -> Result<u8> {
     } else {
         reports
     };
-    let color = args.output_file.is_none()
-        && std::io::stdout().is_terminal()
-        && std::env::var_os(NO_COLOR_ENV).is_none();
+    let color = args.output_file.is_none() && stdout_has_color();
     let output = render(
         args.output_format,
         &reports,
@@ -269,14 +269,57 @@ fn write_output(file: Option<&Path>, output: &str) -> Result<()> {
     }
 }
 
-fn rules_table() -> String {
-    const WIDTH: usize = 20;
-    let header = format!("{:WIDTH$} {:4} DESCRIPTION\n", "RULE", "FIX");
-    let rows = RuleType::iter().map(|kind| {
-        let fix = if kind.fixable() { "yes" } else { "" };
-        format!("{:WIDTH$} {fix:4} {}\n", kind.name(), kind.summary())
+fn stdout_has_color() -> bool {
+    std::io::stdout().is_terminal() && std::env::var_os(NO_COLOR_ENV).is_none()
+}
+
+fn rules_table(color: bool) -> String {
+    const WIDTH: usize = 25;
+    let heading = |text: &str| {
+        if color {
+            format!("{}\n", text.bold())
+        } else {
+            format!("{text}\n")
+        }
+    };
+    let dim = |text: String| {
+        if color {
+            text.dimmed().to_string()
+        } else {
+            text
+        }
+    };
+    let rules = RuleType::iter().map(|kind| {
+        let fix = if kind.fixable() { FIXABLE_MARKER } else { "" };
+        format!(
+            "  {:WIDTH$}{}{fix}\n",
+            kind.name(),
+            dim(kind.summary().to_string())
+        )
     });
-    std::iter::once(header).chain(rows).collect()
+    let aliases = ALIASES
+        .iter()
+        .map(|alias| format!("  {:WIDTH$}{}\n", alias.name, dim(alias_target(alias))));
+    std::iter::once(heading("Rules"))
+        .chain(rules)
+        .chain(std::iter::once(format!(
+            "\n{}",
+            heading(&format!("Aliases of {}", RuleType::AllowedValues.name()))
+        )))
+        .chain(aliases)
+        .chain(std::iter::once(format!(
+            "\n{} can be fixed with `odcslint check --fix`\n",
+            FIXABLE_MARKER.trim_start()
+        )))
+        .collect()
+}
+
+fn alias_target(alias: &Alias) -> String {
+    let role = alias
+        .role
+        .map(|role| format!(" (role: {role})"))
+        .unwrap_or_default();
+    format!("{}{role}", alias.field.path().unwrap_or_default())
 }
 
 #[cfg(test)]
@@ -285,8 +328,14 @@ mod tests {
 
     #[test]
     fn rules_table_lists_every_rule() {
-        let table = rules_table();
+        let table = rules_table(false);
         assert!(RuleType::iter().all(|kind| table.contains(kind.name())));
+    }
+
+    #[test]
+    fn rules_table_lists_every_alias() {
+        let table = rules_table(false);
+        assert!(ALIASES.iter().all(|alias| table.contains(alias.name)));
     }
 
     #[test]

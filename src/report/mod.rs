@@ -2,6 +2,8 @@ mod github;
 mod structured;
 mod text;
 
+pub use text::FIXABLE_MARKER;
+
 use clap::ValueEnum;
 
 use crate::diagnostic::Severity;

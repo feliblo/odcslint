@@ -4,7 +4,7 @@ use super::{Summary, TextOptions};
 use crate::diagnostic::{Finding, Severity};
 use crate::engine::FileReport;
 
-const FIXABLE_MARKER: &str = " [*]";
+pub const FIXABLE_MARKER: &str = " [*]";
 const SEVERITY_WIDTH: usize = 7;
 
 pub fn render(reports: &[FileReport], summary: &Summary, options: TextOptions) -> String {
