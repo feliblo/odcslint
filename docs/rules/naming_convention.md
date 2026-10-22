@@ -17,7 +17,9 @@ Checks that schema object or property names follow a naming convention, either a
 | `pascal_case` | `OrderId` | |
 | `kebab_case` | `order-id` | |
 
-## Examples
+## Example
+
+**Config**
 
 === "YAML"
 
@@ -47,9 +49,20 @@ Checks that schema object or property names follow a naming convention, either a
     convention = { pattern = '^(raw|stg|dim|fct)_[a-z0-9_]+$' }
     ```
 
-## Findings
+**Contract**
+
+```yaml title="orders.odcs.yaml"
+schema:
+  - name: orders
+    physicalName: orders  # needs a raw_, stg_, dim_ or fct_ prefix
+    properties:
+      - name: customerName  # not snake_case
+```
+
+**Findings**
 
 ```text
 orders.odcs.yaml
-  16:15  error    naming_convention  property name `customerName` does not follow snake_case
+  3:19  error    naming_convention  schema physicalName `orders` does not follow pattern `^(raw|stg|dim|fct)_[a-z0-9_]+$`
+  5:15  error    naming_convention  property name `customerName` does not follow snake_case
 ```

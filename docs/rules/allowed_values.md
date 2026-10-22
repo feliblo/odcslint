@@ -4,7 +4,10 @@ Checks that a field only uses values from an allow-list, or values that match a 
 
 ## Fields
 
-Pick the field with an alias as the rule `type`, or write it out with `type: allowed_values` and `field:`. Both check the same thing. Click an alias to see it in the example.
+Each `allowed_values` rule checks one field of the contract. There are two ways to say which one:
+
+- **Alias**: a ready-made rule type, such as `allowed_domains`, that already knows which field to check. You only add the allowed values.
+- **Long form**: `type: allowed_values` with `field:` set to the field you want, by its ODCS path (`team.members.username`) or its short name (`team_members_username`). This works for every field, including the ones without an alias.
 
 <div class="alias-picker" markdown>
 
@@ -14,6 +17,9 @@ Pick the field with an alias as the rule `type`, or write it out with `type: all
     - type: allowed_owners
       values: [alice, bob]
     ```
+
+    :lucide-mouse-pointer-click: Click a row to show it in the example above.
+    { .alias-picker__hint }
 
     | Alias | Field | Example values |
     |---|---|---|
@@ -44,27 +50,28 @@ Pick the field with an alias as the rule `type`, or write it out with `type: all
       values: [alice, bob]
     ```
 
-    Name the field by its ODCS path or by its short name; both mean the same thing.
+    :lucide-mouse-pointer-click: Click a row to show it in the example above.
+    { .alias-picker__hint }
 
-    | ODCS path | Short name | Checks |
+    | Field | Checks | Example values |
     |---|---|---|
-    | `apiVersion` | `api_version` | `apiVersion` |
-    | `domain` | `domain` | `domain` |
-    | `status` | `status` | `status` |
-    | `tenant` | `tenant` | `tenant` |
-    | `dataProduct` | `data_product` | `dataProduct` |
-    | `tags` | `contract_tags` | each entry of the contract's `tags` |
-    | `team.name` | `team_name` | `team.name` |
-    | `team.members.username` | `team_members_username` | `username` of each team member (`team.members`, or the deprecated `team` list) |
-    | `team.members.role` | `team_members_role` | `role` of each team member |
-    | `customProperties: <key>` | `custom_property: <key>` | `value` of the contract-level `customProperties` entry whose `property` is `<key>` |
-    | `schema.name` | `schema_name` | `name` of each schema object |
-    | `schema.physicalType` | `schema_physical_type` | `physicalType` of each schema object |
-    | `schema.tags` | `schema_tags` | `tags` of each schema object |
-    | `schema.properties.logicalType` | `property_logical_type` | `logicalType` of each property, nested ones included |
-    | `schema.properties.physicalType` | `property_physical_type` | `physicalType` of each property |
-    | `schema.properties.classification` | `property_classification` | `classification` of each property |
-    | `schema.properties.tags` | `property_tags` | `tags` of each property |
+    | `apiVersion` or `api_version` | the contract's `apiVersion` | v3.1.0, v3.2.0 |
+    | `domain` | the contract's `domain` | finance, sales |
+    | `status` | the contract's `status` | active, draft |
+    | `tenant` | the contract's `tenant` | emea, us |
+    | `dataProduct` or `data_product` | the contract's `dataProduct` | orders, customers |
+    | `tags` or `contract_tags` | each entry of the contract's `tags` | finance, pii |
+    | `team.name` or `team_name` | the team's `name` | data-platform, finance |
+    | `team.members.username` or `team_members_username` | `username` of each team member (`team.members`, or the deprecated `team` list) | alice, bob, carol |
+    | `team.members.role` or `team_members_role` | `role` of each team member | owner, engineer, analyst |
+    | `customProperties: my_custom_property` or `custom_property: my_custom_property` | `value` of the contract-level `customProperties` entry whose `property` is `my_custom_property` | gold, silver |
+    | `schema.name` or `schema_name` | `name` of each schema object | orders, customers |
+    | `schema.physicalType` or `schema_physical_type` | `physicalType` of each schema object | table, view |
+    | `schema.tags` or `schema_tags` | `tags` of each schema object | finance, pii |
+    | `schema.properties.logicalType` or `property_logical_type` | `logicalType` of each property, nested ones included | string, integer, date |
+    | `schema.properties.physicalType` or `property_physical_type` | `physicalType` of each property | varchar, bigint, timestamp |
+    | `schema.properties.classification` or `property_classification` | `classification` of each property | public, internal, confidential |
+    | `schema.properties.tags` or `property_tags` | `tags` of each property | pii, metric |
 
 </div>
 
@@ -81,7 +88,9 @@ Pick the field with an alias as the rule `type`, or write it out with `type: all
 
 With `required: true`, every object that owns the field must have it: every property needs a `logicalType`, for instance, or the contract needs at least one owner.
 
-## Examples
+## Example
+
+**Config**
 
 === "YAML"
 
@@ -96,9 +105,9 @@ With `required: true`, every object that owns the field must have it: every prop
       - type: allowed_domains
         values: [finance, marketing, sales]
 
-      # Owners stored as a custom property must look like first.last.
+      # Values of a custom property must look like first.last.
       - type: allowed_values
-        field: { customProperties: owner }
+        field: { customProperties: my_custom_property }
         pattern: '^[a-z]+\.[a-z]+$'
 
       # Restrict physical types.
@@ -121,15 +130,24 @@ With `required: true`, every object that owns the field must have it: every prop
 
     [[rules]]
     type = "allowed_values"
-    field = { customProperties = "owner" }
+    field = { customProperties = "my_custom_property" }
     pattern = '^[a-z]+\.[a-z]+$'
     ```
 
-## Findings
+**Contract**
+
+```yaml title="orders.odcs.yaml"
+domain: hr  # not an allowed domain
+team:
+  members:
+    - username: mallory  # not an approved owner
+      role: owner
+```
+
+**Findings**
 
 ```text
 orders.odcs.yaml
-  1:1   error    allowed_owners   no team member username found
-  3:9   error    allowed_domains  domain `hr` is not allowed; allowed values: finance, marketing, sales
-  6:17  error    allowed_owners   team member username `mallory` is not allowed; allowed values: alice, bob, data-platform-bot
+  1:9   error    allowed_domains  domain `hr` is not allowed; allowed values: finance, marketing, sales
+  4:17  error    allowed_owners   team member username `mallory` is not allowed; allowed values: alice, bob, data-platform-bot
 ```

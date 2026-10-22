@@ -11,7 +11,9 @@ Checks the contract's file name. You can require it to match a glob, require its
 
 You need to set at least one of the two.
 
-## Examples
+## Example
+
+**Config**
 
 === "YAML"
 
@@ -31,12 +33,16 @@ You need to set at least one of the two.
     match_field = "name"
     ```
 
-## Findings
+**Contract**
+
+```yaml title="orders.odcs.yml"
+name: sales_orders  # file is orders.odcs.yml: wrong extension and not sales_orders
+```
+
+**Findings**
 
 ```text
 orders.odcs.yml
   1:1  error    file_naming  file name `orders.odcs.yml` does not match `*.odcs.yaml`
-
-orders.odcs.yaml
-  7:7  error    file_naming  file name `orders.odcs.yaml` does not match contract name `sales_orders`
+  1:7  error    file_naming  file name `orders.odcs.yml` does not match contract name `sales_orders`
 ```

@@ -9,7 +9,9 @@ Checks that fields are present and not empty on every object in scope. A value c
 | `scope` | `contract` | `contract`, `schema` (each schema object) or `property` (each property, nested ones included). |
 | `fields` | required | Dotted paths relative to each object, for example `description.purpose`. |
 
-## Examples
+## Example
+
+**Config**
 
 === "YAML"
 
@@ -36,10 +38,25 @@ Checks that fields are present and not empty on every object in scope. A value c
     fields = ["logicalType", "physicalType"]
     ```
 
-## Findings
+**Contract**
+
+```yaml title="orders.odcs.yaml"
+domain: sales
+team:
+  name: sales
+description:  # no purpose
+  usage: Monthly revenue reporting
+schema:
+  - name: orders
+    properties:
+      - name: amount  # no physicalType
+        logicalType: number
+```
+
+**Findings**
 
 ```text
 orders.odcs.yaml
-  1:1   error    required_fields  missing required field `description.purpose`
-  14:9  error    required_fields  property `amount` is missing required field `physicalType`
+  1:1  error    required_fields  missing required field `description.purpose`
+  9:9  error    required_fields  property `amount` is missing required field `physicalType`
 ```

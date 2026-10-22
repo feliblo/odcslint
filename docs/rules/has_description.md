@@ -9,7 +9,9 @@ Checks that objects in scope have a description of at least a minimum length. Fo
 | `scope` | `property` | `contract`, `schema` or `property`. |
 | `min_length` | `1` | Minimum number of characters, after trimming whitespace. |
 
-## Examples
+## Example
+
+**Config**
 
 === "YAML"
 
@@ -29,10 +31,21 @@ Checks that objects in scope have a description of at least a minimum length. Fo
     min_length = 10
     ```
 
-## Findings
+**Contract**
+
+```yaml title="orders.odcs.yaml"
+schema:
+  - name: orders
+    properties:
+      - name: amount  # no description
+      - name: note
+        description: A note  # shorter than 10 characters
+```
+
+**Findings**
 
 ```text
 orders.odcs.yaml
-  14:9  error    has_description  property `amount` has no description
-  18:9  error    has_description  description of property `note` is shorter than 10 characters
+  4:9  error    has_description  property `amount` has no description
+  5:9  error    has_description  description of property `note` is shorter than 10 characters
 ```

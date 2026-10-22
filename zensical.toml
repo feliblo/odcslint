@@ -22,7 +22,7 @@ nav = [
     "autofix.md",
     { "Rules" = [
       "rules/index.md",
-      "rules/allowed_values.md",
+      { "allowed_values (15 aliases)" = "rules/allowed_values.md" },
       "rules/deprecated_fields.md",
       "rules/file_naming.md",
       "rules/has_description.md",

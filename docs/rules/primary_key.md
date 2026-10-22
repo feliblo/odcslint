@@ -14,7 +14,9 @@ The ODCS schema lets `primaryKey` and `primaryKeyPosition` disagree. This rule c
 | `require_primary_key` | `false` | Every schema object must have at least one primary key. |
 | `require_position` | `true` | Every primary key must have a `primaryKeyPosition`. Set to `false` to allow single-column keys without a position. |
 
-## Examples
+## Example
+
+**Config**
 
 === "YAML"
 
@@ -32,13 +34,22 @@ The ODCS schema lets `primaryKey` and `primaryKeyPosition` disagree. This rule c
     require_primary_key = true
     ```
 
-## Findings
+**Contract**
+
+```yaml title="orders.odcs.yaml"
+schema:
+  - name: orders
+    properties:
+      - name: order_id  # primary key without a primaryKeyPosition
+        primaryKey: true
+      - name: amount
+        primaryKeyPosition: 2  # position on a column that isn't a primary key
+```
+
+**Findings**
 
 ```text
 orders.odcs.yaml
-  9:5    error    primary_key  `orders` has no primary key
-  9:5    error    primary_key  primaryKeyPosition values of `orders` should be 1..2 but are 1, 3
-  12:9   error    primary_key  primary key `order_id` has no primaryKeyPosition
-  20:29  error    primary_key  `amount` has a primaryKeyPosition but is not a primary key
-  24:9   error    primary_key  duplicate primaryKeyPosition 1 in `orders`
+  4:9   error    primary_key  primary key `order_id` has no primaryKeyPosition
+  7:29  error    primary_key  `amount` has a primaryKeyPosition but is not a primary key
 ```

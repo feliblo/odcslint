@@ -21,7 +21,9 @@ Metadata columns are the ones your platform adds rather than the source: load ti
 
 A column is a metadata column if any of the four matchers applies. Any key you leave out of `metadata_columns` keeps its default, so setting only `suffixes` still keeps `_` as a prefix. To stop treating `_` columns as metadata, set `prefixes: []`.
 
-## Examples
+## Example
+
+**Config**
 
 The simplest setup uses the default: columns starting with `_` go last.
 
@@ -101,13 +103,26 @@ properties:
 
 The primary keys move to the top in `primaryKeyPosition` order. `customer_id`, `amount` and `status` match none of the matchers, so they stay regular columns. The six metadata columns move to the end and keep their original order relative to each other; the rule doesn't sort them by matcher.
 
-## Findings
+**Contract**
+
+```yaml title="orders.odcs.yaml"
+schema:
+  - name: orders
+    properties:
+      - name: _loaded_at  # metadata column before the primary key
+      - name: order_id
+        primaryKey: true
+        primaryKeyPosition: 1
+      - name: amount
+```
+
+**Findings**
 
 You get one finding per list, at the first property that is out of place:
 
 ```text
 orders.odcs.yaml
-  13:9  error    property_order  expected `order_id` at position 1 of `orders`, found `_loaded_at` [*]
+  4:9  error    property_order  expected `order_id` at position 1 of `orders`, found `_loaded_at` [*]
 ```
 
 ## Fix
