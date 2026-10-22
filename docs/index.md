@@ -91,19 +91,14 @@ odcslint is a linter for [Open Data Contract Standard (ODCS)](https://bitol-io.g
     odcslint init
     ```
 
-3.  Check every `*.odcs.yaml` below the current directory against the ODCS schema and your rules:
+3.  Check every `*.odcs.yaml` below the current directory against the ODCS schema and your rules, then fix what can be fixed:
 
     ```bash
     odcslint check
-    ```
-
-4.  Fix what can be fixed:
-
-    ```bash
     odcslint check --fix
     ```
 
-5.  Move your contracts to the newest ODCS version, after checking what would change:
+4.  Move your contracts to the newest ODCS version, after checking what would change:
 
     ```bash
     odcslint upgrade --dry-run
