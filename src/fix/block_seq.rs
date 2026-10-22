@@ -1,14 +1,13 @@
 //! The parser's collection end markers are unreliable, so item extents are derived from indentation.
 
+use super::text::{
+    block_end, comments_above, dash_before, dash_indent, line_ending, line_start, LF,
+};
 use super::TextEdit;
 use crate::document::node::as_seq;
 use crate::document::{Document, Node};
 
-const COMMENT: char = '#';
-const DASH: char = '-';
 const FLOW_SEQUENCE_START: char = '[';
-const CRLF: &str = "\r\n";
-const LF: &str = "\n";
 
 pub fn reorder(document: &Document<'_>, sequence: &Node<'_>, order: &[usize]) -> Option<TextEdit> {
     let source = document.source();
@@ -43,7 +42,7 @@ pub fn reorder(document: &Document<'_>, sequence: &Node<'_>, order: &[usize]) ->
             let line = line_start(source, dash);
             (
                 comments_above(source, line, indent),
-                item_end(source, line, indent),
+                block_end(source, line, indent, false),
             )
         })
         .collect();
@@ -51,7 +50,7 @@ pub fn reorder(document: &Document<'_>, sequence: &Node<'_>, order: &[usize]) ->
         return None;
     }
 
-    let line_ending = if source.contains(CRLF) { CRLF } else { LF };
+    let line_ending = line_ending(source);
     let separators: Vec<&str> = chunks
         .windows(2)
         .map(|pair| &source[pair[0].1..pair[1].0])
@@ -80,55 +79,6 @@ pub fn reorder(document: &Document<'_>, sequence: &Node<'_>, order: &[usize]) ->
             .to_string()
     };
     Some(TextEdit { range, replacement })
-}
-
-fn dash_before(source: &str, item_start: usize) -> Option<usize> {
-    let before = source[..item_start].trim_end();
-    before.ends_with(DASH).then(|| before.len() - 1)
-}
-
-fn dash_indent(source: &str, dash: usize) -> Option<usize> {
-    let line = line_start(source, dash);
-    source[line..dash]
-        .chars()
-        .all(|character| character == ' ')
-        .then_some(dash - line)
-}
-
-fn line_start(source: &str, offset: usize) -> usize {
-    source[..offset].rfind('\n').map_or(0, |index| index + 1)
-}
-
-fn indent_of(line: &str) -> usize {
-    line.len() - line.trim_start_matches(' ').len()
-}
-
-fn comments_above(source: &str, line: usize, indent: usize) -> usize {
-    std::iter::successors(Some(line), |&current| {
-        let previous = line_start(source, current.checked_sub(1)?);
-        let text = source[previous..current].trim_end();
-        (text.trim_start().starts_with(COMMENT) && indent_of(text) == indent).then_some(previous)
-    })
-    .last()
-    .unwrap_or(line)
-}
-
-fn item_end(source: &str, dash_line: usize, indent: usize) -> usize {
-    let mut lines = source[dash_line..]
-        .split_inclusive('\n')
-        .scan(dash_line, |offset, line| {
-            let start = *offset;
-            *offset += line.len();
-            Some((start, line))
-        });
-    let first_end = lines
-        .next()
-        .map_or(dash_line, |(start, line)| start + line.len());
-    lines
-        .take_while(|(_, line)| line.trim().is_empty() || indent_of(line) > indent)
-        .filter(|(_, line)| !line.trim().is_empty())
-        .last()
-        .map_or(first_end, |(start, line)| start + line.len())
 }
 
 fn well_formed(chunks: &[(usize, usize)], item_starts: &[usize]) -> bool {

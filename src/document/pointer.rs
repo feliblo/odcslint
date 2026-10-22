@@ -24,6 +24,16 @@ pub fn resolve<'a>(root: &'a Node<'a>, pointer: &str) -> Target<'a> {
     )
 }
 
+pub fn resolve_exact<'a>(root: &'a Node<'a>, pointer: &str) -> Option<Target<'a>> {
+    segments(pointer).try_fold(
+        Target {
+            node: root,
+            key: None,
+        },
+        |target, segment| step(target.node, &segment),
+    )
+}
+
 fn step<'a>(node: &'a Node<'a>, segment: &str) -> Option<Target<'a>> {
     entry(node, segment)
         .map(|(key, value)| Target {
@@ -72,6 +82,13 @@ mod tests {
             document.location(target.node),
             Location { line: 2, column: 5 }
         );
+    }
+
+    #[test]
+    fn exact_resolution_fails_for_missing_nodes() {
+        let document = Document::parse(SOURCE).unwrap();
+        assert!(resolve_exact(document.root(), "/schema/0/missing").is_none());
+        assert!(resolve_exact(document.root(), "/schema/0/properties/0/name").is_some());
     }
 
     #[test]

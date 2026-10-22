@@ -1,0 +1,44 @@
+# Orders contract, maintained by the sales data team.
+apiVersion: v3.0.2
+kind: DataContract
+id: 53581432-6c55-4ba2-a65f-72344a91553c
+version: 1.0.0
+status: active
+name: orders
+slaDefaultElement: orders
+team:
+  # Owners of this contract
+  - username: alice
+    role: owner
+  - username: bob
+    role: engineer
+servers:
+  - server: prod
+    type: postgres
+    host: db.example.com
+    port: 5432
+    database: sales
+    schema: public
+    comment: migrated from the old warehouse
+schema:
+  - name: orders
+    properties:
+      - name: order_id
+        logicalType: string
+        primaryKey: true
+        primaryKeyPosition: 1
+      - name: amount
+        logicalType: number
+        logicalTypeOptions:
+          minimum: 0
+          exclusiveMinimum: true
+      - name: created_at
+        logicalType: timestamp
+    quality:
+      - rule: rowCount
+        mustBeGreaterOrEqualTo: 1
+        mustBeLessOrEqualTo: 1000000
+slaProperties:
+  - property: latency
+    value: 4
+    unit: d

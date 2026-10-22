@@ -14,6 +14,7 @@ use crate::error::{Error, Result};
 use crate::fix::{self, Permutation};
 use crate::rules::{self, Context};
 use crate::schema::{self, SchemaSelection, SchemaVersion};
+use crate::upgrade::{self, Status, UpgradeOutcome};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FileReport {
@@ -33,6 +34,60 @@ pub fn check_files(
         .collect::<Result<Vec<_>>>()?;
     reports.sort_by(|left, right| left.path.cmp(&right.path));
     Ok(reports)
+}
+
+#[derive(Debug, Clone)]
+pub struct UpgradeReport {
+    pub path: String,
+    pub outcome: UpgradeOutcome,
+    pub written: bool,
+}
+
+/// Upgrades every file in parallel; reports are sorted by path. Files are written only when
+/// `write` is set and the upgrade is complete, or partial with `allow_partial`.
+pub fn upgrade_files(
+    paths: &[impl AsRef<Path> + Sync],
+    target: SchemaVersion,
+    write: bool,
+    allow_partial: bool,
+) -> Result<Vec<UpgradeReport>> {
+    let mut reports = paths
+        .par_iter()
+        .map(|path| upgrade_file(path.as_ref(), target, write, allow_partial))
+        .collect::<Result<Vec<_>>>()?;
+    reports.sort_by(|left, right| left.path.cmp(&right.path));
+    Ok(reports)
+}
+
+fn upgrade_file(
+    path: &Path,
+    target: SchemaVersion,
+    write: bool,
+    allow_partial: bool,
+) -> Result<UpgradeReport> {
+    let original = fs::read_to_string(path).map_err(|source| Error::Read {
+        path: path.to_path_buf(),
+        source,
+    })?;
+    let outcome = upgrade::upgrade(&original, target)?;
+    let writable =
+        outcome.status == Status::Upgraded || (outcome.status == Status::Blocked && allow_partial);
+    let changed = outcome
+        .source
+        .as_deref()
+        .filter(|source| *source != original);
+    let written = match changed {
+        Some(source) if write && writable => {
+            write_atomically(path, source)?;
+            true
+        }
+        _ => false,
+    };
+    Ok(UpgradeReport {
+        path: normalize_path(path),
+        outcome,
+        written,
+    })
 }
 
 fn check_file(path: &Path, config: &Config, fix: bool) -> Result<FileReport> {
