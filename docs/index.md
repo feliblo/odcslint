@@ -85,16 +85,16 @@ odcslint is a linter for [Open Data Contract Standard (ODCS)](https://bitol-io.g
         brew install feliblo/tap/odcslint
         ```
 
-2.  Check every `*.odcs.yaml` below the current directory against the ODCS schema:
-
-    ```bash
-    odcslint check
-    ```
-
-3.  Write a starter `odcslint.yml`, then enable and tune the rules you want:
+2.  Write a starter `odcslint.yml`, then enable and tune the rules you want:
 
     ```bash
     odcslint init
+    ```
+
+3.  Check every `*.odcs.yaml` below the current directory against the ODCS schema and your rules:
+
+    ```bash
+    odcslint check
     ```
 
 4.  Fix what can be fixed:
