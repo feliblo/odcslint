@@ -10,14 +10,14 @@ hide:
 
 <p class="hero-tagline">Lint your data contracts against the standard <em>and</em> your own rules.</p>
 
-odcslint is a linter for [Open Data Contract Standard (ODCS)](https://bitol-io.github.io/open-data-contract-standard/) contracts, written in Rust. It checks every contract against the official schema and against the conventions your team agrees on. Where it can, it fixes problems for you and leaves your formatting alone.
+odcslint is a linter for [Open Data Contract Standard (ODCS)](https://bitol-io.github.io/open-data-contract-standard/) contracts, written in Rust. It checks every contract against the official schema and against the conventions your team agrees on. Where it can, it fixes problems for you and leaves your formatting alone. When a new ODCS version comes out, `odcslint upgrade` moves your contracts to it.
 
 [Get started](installation.md){ .md-button .md-button--primary }
 [Browse the rules](rules/index.md){ .md-button }
 
 </div>
 
-## What it checks
+## What it does
 
 <div class="grid cards pillars" markdown>
 
@@ -50,7 +50,60 @@ odcslint is a linter for [Open Data Contract Standard (ODCS)](https://bitol-io.g
 
     [:lucide-arrow-right: All rules](rules/index.md)
 
+-   :lucide-circle-arrow-up:{ .lg .middle } __Autoupgrades__
+
+    ---
+
+    `odcslint upgrade` moves contracts to a newer ODCS version and converts the breaking changes along the way. Like autofix, it edits the original text, so your comments stay. Run it with `--dry-run` first to see what would change.
+
+    ```diff
+    -apiVersion: v3.0.2
+    +apiVersion: v3.2.0
+     team:
+    -  - username: alice
+    +  members:
+    +    - username: alice
+    ```
+
+    [:lucide-arrow-right: Upgrading contracts](upgrade.md)
+
 </div>
+
+## Quick start
+
+1.  Install odcslint:
+
+    === "pip / uv"
+
+        ```bash
+        pip install odcslint
+        ```
+
+    === "Homebrew"
+
+        ```bash
+        brew install feliblo/tap/odcslint
+        ```
+
+2.  Write a starter `odcslint.yml`, then enable and tune the rules you want:
+
+    ```bash
+    odcslint init
+    ```
+
+3.  Check every `*.odcs.yaml` below the current directory against the ODCS schema and your rules, then fix what can be fixed:
+
+    ```bash
+    odcslint check
+    odcslint check --fix
+    ```
+
+4.  Move your contracts to the newest ODCS version, after checking what would change:
+
+    ```bash
+    odcslint upgrade --dry-run
+    odcslint upgrade
+    ```
 
 ## Autofix
 
@@ -69,30 +122,6 @@ odcslint is a linter for [Open Data Contract Standard (ODCS)](https://bitol-io.g
 ```
 
 [:lucide-arrow-right: How autofix works](autofix.md)
-
-## Upgrades
-
-`odcslint upgrade` moves contracts to a newer ODCS version and converts the breaking changes along the way. Like autofix, it edits the original text, so your comments stay. Run it with `--dry-run` first to see what would change.
-
-```diff
--apiVersion: v3.0.2
-+apiVersion: v3.2.0
- team:
--  # Owners of this contract
--  - username: alice
--    role: owner
-+  members:
-+    # Owners of this contract
-+    - username: alice
-+      role: owner
- ...
-         logicalTypeOptions:
--          minimum: 0
--          exclusiveMinimum: true
-+          exclusiveMinimum: 0
-```
-
-[:lucide-arrow-right: Upgrading contracts](upgrade.md)
 
 ## Example output
 
@@ -142,37 +171,3 @@ Found 4 errors and 0 warnings (2 files checked). 2 findings marked [*] can be fi
     [:lucide-arrow-right: Usage](usage.md)
 
 </div>
-
-## Quick start
-
-1.  Install odcslint:
-
-    === "pip / uv"
-
-        ```bash
-        pip install odcslint
-        ```
-
-    === "Homebrew"
-
-        ```bash
-        brew install feliblo/tap/odcslint
-        ```
-
-2.  Check every `*.odcs.yaml` below the current directory against the ODCS schema:
-
-    ```bash
-    odcslint check
-    ```
-
-3.  Write a starter `odcslint.yml`, then enable and tune the rules you want:
-
-    ```bash
-    odcslint init
-    ```
-
-4.  Fix what can be fixed:
-
-    ```bash
-    odcslint check --fix
-    ```
