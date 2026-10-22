@@ -22,12 +22,14 @@ The `dist` binary is 5.1 MiB.
 
 | | `datacontract lint` | `odcslint check` |
 |---|---|---|
-| 1 contract | 301 ms | 7.3 ms |
-| 200 contracts, one call per file | 58 s | 1.4 s |
-| 200 contracts, one call | not supported (one file per call) | 0.018 s |
-| 10,000 contracts | about 48 min (estimated from 290 ms per file) | 0.40 s |
+| 1 contract | 301 ms | 7.7 ms |
+| 200 contracts | 12 s (10 calls in parallel) | 0.018 s (one call) |
+| 10,000 contracts | 11 min 42 s (10 calls in parallel) | 0.39 s (one call) |
+| 200 contracts, one call after another | 57 s | 1.4 s |
 
-The validation itself is quick in both tools: `datacontract lint` reports about 0.03 s per contract. Most of its wall time is Python starting up, and since it takes one file per call, that start-up happens once per contract. The difference matters mostly when you check many contracts at once, for example in a pre-commit hook or CI.
+`datacontract lint` takes one file per call, so to give it its best case we ran one call per CPU core at the same time. That made it about 4.6 times faster than running the calls one after another. odcslint takes all files in one call and spreads the work over the cores itself.
+
+The validation itself is quick in both tools: `datacontract lint` reports about 0.03 s per contract. Most of its wall time is Python starting up, and that happens once per contract. The difference matters mostly when you check many contracts at once, for example in a pre-commit hook or CI.
 
 ### Correctness on the upstream ODCS fixtures
 
@@ -44,23 +46,24 @@ Both tools reject three upstream examples that declare `apiVersion: v3.0.2` but 
 
 ### Method
 
-The comparison used datacontract-cli 1.2.7 and odcslint 0.1.0, on 2026-10-19 on an Apple M4 (10 cores).
+The comparison used datacontract-cli 1.2.7 and odcslint 0.2.0, on 2026-10-22 on an Apple M4 (10 cores).
 
 datacontract ran as `datacontract lint --no-inline-references --all-errors <file>`. `--no-inline-references` keeps it offline (it then uses its bundled schemas and makes no network calls), and `--all-errors` makes it report every schema error instead of only the first. odcslint ran as `odcslint check -q <files>`, using a release build and the default config, which means schema validation only.
 
 Times are wall-clock time around each process, start-up included:
 
 - Single contract: the median of 15 runs on the same file, after one warm-up run.
-- 200 contracts: the first 200 files of the generated corpus, with one process per file for both tools, plus one odcslint run over all 200 files. odcslint batch timings are the median of 5 runs.
-- 10,000 contracts: for datacontract this is an estimate from the measured 290 ms per file. We didn't run it.
+- 200 contracts: the first 200 files of the generated corpus. datacontract ran one process per file, first 10 at a time (one per core), then one after another. odcslint ran once over all 200 files (median of 5 runs) and once per file.
+- 10,000 contracts: the whole generated corpus. datacontract ran one process per file, 10 at a time, once. odcslint ran once over the directory (median of 5 runs).
 
 A contract counts as rejected when the tool exits with a non-zero code.
 
 ## Reproduce
 
 ```bash
-just bench 10000                  # odcslint on 10,000 generated contracts (uses hyperfine if installed)
-just compare-datacontract 200     # installs datacontract-cli 1.2.7 into target/ and runs the comparison
+just bench 10000                       # odcslint on 10,000 generated contracts (uses hyperfine if installed)
+just compare-datacontract 200          # installs datacontract-cli 1.2.7 into target/ and runs the comparison
+just compare-datacontract 200 --full   # also times datacontract on all 10,000 contracts (takes about 12 minutes)
 ```
 
 The comparison script is `scripts/compare_datacontract.py`.

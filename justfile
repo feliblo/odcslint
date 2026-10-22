@@ -52,10 +52,12 @@ check-schemas ref="main":
     python3 -I scripts/check_schema_versions.py {{ref}}
 
 # Compare with `datacontract lint` (datacontract-cli). Installs it into target/datacontract-venv.
-compare-datacontract files="200" version="1.2.7": (gen-corpus "10000")
+datacontract_version := "1.2.7"
+
+compare-datacontract files="200" *flags: (gen-corpus "10000")
     cargo build --release -q
-    test -x target/datacontract-venv/bin/datacontract || (uv venv -q target/datacontract-venv && VIRTUAL_ENV=target/datacontract-venv uv pip install -q datacontract-cli=={{version}})
-    python3 -I scripts/compare_datacontract.py "$PWD" target/datacontract-venv/bin/datacontract {{files}}
+    test -x target/datacontract-venv/bin/datacontract || (uv venv -q target/datacontract-venv && VIRTUAL_ENV=target/datacontract-venv uv pip install -q datacontract-cli=={{datacontract_version}})
+    python3 -I scripts/compare_datacontract.py "$PWD" target/datacontract-venv/bin/datacontract {{files}} {{flags}}
 
 docs:
     uvx zensical serve
