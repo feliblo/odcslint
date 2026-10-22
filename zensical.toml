@@ -14,6 +14,7 @@ nav = [
     "installation.md",
     "usage.md",
     "configuration.md",
+    "upgrade.md",
   ] },
   { "Checks" = [
     "schema-validation.md",

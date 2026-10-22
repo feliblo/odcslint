@@ -26,8 +26,9 @@ cargo test --workspace --all-features
 | `schema` | Pick the embedded ODCS schema by `apiVersion`, compile it once, and turn validation errors into findings. |
 | `config` | Discover and load `odcslint.yml` / `odcslint.toml` / `pyproject.toml`; compile globs and regexes at load time. |
 | `rules` | One module per rule type: options, `check` function and unit tests. |
-| `fix` | Text edits, overlap filtering, and reordering block sequences by moving source text. |
+| `fix` | Formatting-preserving text edits (replace, rename, remove, insert, wrap, append), overlap filtering, and reordering block sequences. |
 | `engine` | The per-file pipeline (fix loop, lint) run in parallel with `rayon`. |
+| `upgrade` | Version upgrades: migrations describe changes as operations on the contract's JSON, each turned into a text edit and checked against the JSON; the result is validated against the target schema. |
 | `report` | Output formats. |
 | `cli` | Argument parsing and commands. |
 
