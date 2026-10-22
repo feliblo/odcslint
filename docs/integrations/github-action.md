@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: feliblo/odcslint@v0.1.0
+      - uses: feliblo/odcslint@v0.2.0
         with:
           paths: contracts/
 ```

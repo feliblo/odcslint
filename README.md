@@ -69,7 +69,7 @@ powershell -ExecutionPolicy Bypass -c "irm https://github.com/feliblo/odcslint/r
 ```yaml
 repos:
   - repo: https://github.com/feliblo/odcslint
-    rev: v0.1.0
+    rev: v0.2.0
     hooks:
       - id: odcslint-fix   # or `odcslint` to only check
 ```
@@ -80,7 +80,7 @@ repos:
 <summary><b>GitHub Action</b></summary>
 
 ```yaml
-- uses: feliblo/odcslint@v0.1.0
+- uses: feliblo/odcslint@v0.2.0
   with:
     paths: contracts/
 ```

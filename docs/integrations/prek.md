@@ -10,7 +10,7 @@ odcslint comes with two [prek](https://github.com/j178/prek) hooks. prek reads t
 ```yaml title=".pre-commit-config.yaml"
 repos:
   - repo: https://github.com/feliblo/odcslint
-    rev: v0.1.0
+    rev: v0.2.0
     hooks:
       - id: odcslint-fix   # or `odcslint` to only check
 ```

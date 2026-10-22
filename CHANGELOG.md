@@ -1,3 +1,13 @@
+## v0.2.0 (2026-10-22)
+
+### Feat
+
+- **upgrade**: add odcslint upgrade to move contracts to newer ODCS versions - ([2875fa0](https://github.com/feliblo/odcslint/commit/2875fa0183f020f485d9006d56812bfa9e430296)) - feliblo
+
+### Contributors
+
+[@feliblo](https://github.com/feliblo)
+
 ## v0.1.0 (2026-10-20)
 
 ### Feat
