@@ -102,6 +102,7 @@ cargo install --git https://github.com/feliblo/odcslint
 odcslint init           # write a starter odcslint.yml
 odcslint check          # check every *.odcs.yaml below the current directory
 odcslint check --fix    # apply fixes in place
+odcslint upgrade        # move contracts to the newest ODCS version
 ```
 
 ```console

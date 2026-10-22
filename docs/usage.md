@@ -63,6 +63,14 @@ odcslint check "domains/*/contracts/**/*.yaml"   # a glob
 
 In the structured formats, each finding has the fields `path`, `line`, `column`, `severity`, `rule`, `name`, `message` and `fixable`. `rule` is the rule type, or `schema`, `yaml_syntax` or `unsupported_api_version` for the built-in checks. `name` is the rule's configured name.
 
+## `odcslint upgrade`
+
+Moves contracts to a newer ODCS version and converts the breaking changes between versions. See [Upgrading contracts](upgrade.md).
+
+```bash
+odcslint upgrade [PATHS]... [--to <VERSION>] [--dry-run] [--allow-partial]
+```
+
 ## `odcslint init`
 
 Writes a commented starter config. By default it goes in the current directory.

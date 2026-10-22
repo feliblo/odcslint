@@ -18,6 +18,8 @@ The schemas are copied into the repository under `schemas/odcs/` and compiled in
 
 The schemas are written in JSON Schema Draft 2019-09, and odcslint enforces the whole draft. In practice that means required fields such as `apiVersion`, `kind`, `id` and `version`, no unknown properties (`unevaluatedProperties: false`), enum values such as `logicalType`, server `type` and quality `dimension`, the extra fields each server type requires, and formats such as `uri`, `date` and `date-time`.
 
+If a contract uses something its declared `apiVersion` doesn't support yet, such as `logicalType: timestamp` in a v3.0.2 contract, [`odcslint upgrade`](upgrade.md) moves it to a newer version for you.
+
 ## Findings
 
 Schema findings use the rule name `schema`, point at the offending key, and name the field they are about:

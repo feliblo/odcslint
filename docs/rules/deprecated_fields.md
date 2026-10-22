@@ -8,6 +8,8 @@ Reports fields that ODCS has deprecated, along with what to use instead:
 | `slaDefaultElement` | Set `element` on each `slaProperties` entry. |
 | `team` as a list | Use the `team` object with `members` (ODCS v3.1+). |
 
+[`odcslint upgrade`](../upgrade.md) converts `team` lists and `slaDefaultElement` automatically.
+
 ## Options
 
 This rule has no options.
