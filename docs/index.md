@@ -50,7 +50,7 @@ odcslint is a linter for [Open Data Contract Standard (ODCS)](https://bitol-io.g
 
     [:lucide-arrow-right: All rules](rules/index.md)
 
--   :lucide-circle-arrow-up:{ .lg .middle } __Upgrades between ODCS versions__
+-   :lucide-circle-arrow-up:{ .lg .middle } __Autoupgrades__
 
     ---
 
