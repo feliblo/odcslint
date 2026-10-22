@@ -1,0 +1,79 @@
+name: Bug report
+description: odcslint reports something wrong, misses a problem, crashes or changes a file incorrectly.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! A small contract and config that reproduce the problem make it much faster to fix.
+        Please remove anything confidential from the examples.
+
+  - type: input
+    id: version
+    attributes:
+      label: odcslint version
+      description: Output of `odcslint --version`.
+      placeholder: odcslint 0.2.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install or run odcslint?
+      options:
+        - uv / pip (PyPI)
+        - Homebrew
+        - Shell or PowerShell installer
+        - prek / pre-commit hook
+        - GitHub Action
+        - Built from source
+    validations:
+      required: true
+
+  - type: input
+    id: command
+    attributes:
+      label: Command
+      description: The exact command you ran.
+      placeholder: odcslint check contracts/ --fix
+    validations:
+      required: true
+
+  - type: textarea
+    id: contract
+    attributes:
+      label: Contract
+      description: The smallest contract that shows the problem.
+      render: yaml
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Config
+      description: Your `odcslint.yml` (or the `[tool.odcslint]` section), if you use one.
+      render: yaml
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: The output you got. For `--fix` or `upgrade`, include the changed file or a diff.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS 15, Ubuntu 24.04, Windows 11, ...

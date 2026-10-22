@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://feliblo.github.io/odcslint/
+    about: Installation, configuration and every rule, with examples.
+  - name: Questions about the ODCS standard itself
+    url: https://github.com/bitol-io/open-data-contract-standard/issues
+    about: Schema and specification questions belong with the Open Data Contract Standard.

@@ -1,0 +1,56 @@
+name: Rule request
+description: Suggest a new rule, or a new option for an existing rule.
+labels: [rule]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Rules turn team conventions into checks. Check the [rules](https://feliblo.github.io/odcslint/rules/) first: `allowed_values` and its aliases may already cover it.
+
+  - type: textarea
+    id: convention
+    attributes:
+      label: What should be checked?
+      description: The convention in one or two sentences, and why it matters to your team.
+    validations:
+      required: true
+
+  - type: textarea
+    id: failing
+    attributes:
+      label: A contract that should fail
+      render: yaml
+    validations:
+      required: true
+
+  - type: textarea
+    id: finding
+    attributes:
+      label: The finding you'd expect
+      description: Line, column and message, as odcslint would print it.
+      placeholder: "12:9  error  my_rule  property `Amount` should be snake_case"
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: passing
+    attributes:
+      label: A contract that should pass
+      render: yaml
+
+  - type: textarea
+    id: config
+    attributes:
+      label: How you'd configure it
+      description: What the rule could look like in `odcslint.yml`.
+      render: yaml
+
+  - type: dropdown
+    id: fixable
+    attributes:
+      label: Should `--fix` be able to fix it?
+      options:
+        - "Yes"
+        - "No"
+        - Not sure
