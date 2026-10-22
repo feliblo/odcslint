@@ -17,7 +17,7 @@ odcslint is a linter for [Open Data Contract Standard (ODCS)](https://bitol-io.g
 
 </div>
 
-## What it checks
+## What it does
 
 <div class="grid cards pillars" markdown>
 
@@ -49,6 +49,23 @@ odcslint is a linter for [Open Data Contract Standard (ODCS)](https://bitol-io.g
     ```
 
     [:lucide-arrow-right: All rules](rules/index.md)
+
+-   :lucide-circle-arrow-up:{ .lg .middle } __Upgrades between ODCS versions__
+
+    ---
+
+    `odcslint upgrade` moves contracts to a newer ODCS version and converts the breaking changes along the way. Like autofix, it edits the original text, so your comments stay. Run it with `--dry-run` first to see what would change.
+
+    ```diff
+    -apiVersion: v3.0.2
+    +apiVersion: v3.2.0
+     team:
+    -  - username: alice
+    +  members:
+    +    - username: alice
+    ```
+
+    [:lucide-arrow-right: Upgrading contracts](upgrade.md)
 
 </div>
 
@@ -110,30 +127,6 @@ odcslint is a linter for [Open Data Contract Standard (ODCS)](https://bitol-io.g
 ```
 
 [:lucide-arrow-right: How autofix works](autofix.md)
-
-## Upgrades
-
-`odcslint upgrade` moves contracts to a newer ODCS version and converts the breaking changes along the way. Like autofix, it edits the original text, so your comments stay. Run it with `--dry-run` first to see what would change.
-
-```diff
--apiVersion: v3.0.2
-+apiVersion: v3.2.0
- team:
--  # Owners of this contract
--  - username: alice
--    role: owner
-+  members:
-+    # Owners of this contract
-+    - username: alice
-+      role: owner
- ...
-         logicalTypeOptions:
--          minimum: 0
--          exclusiveMinimum: true
-+          exclusiveMinimum: 0
-```
-
-[:lucide-arrow-right: Upgrading contracts](upgrade.md)
 
 ## Example output
 
