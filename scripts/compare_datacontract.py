@@ -1,6 +1,9 @@
 """Compare odcslint with `datacontract lint` on correctness (upstream fixtures) and speed.
 
-Usage: python3 scripts/compare_datacontract.py <repo> <datacontract-binary> [files]
+Usage: python3 scripts/compare_datacontract.py <repo> <datacontract-binary> [files] [--full]
+
+`datacontract lint` checks one file per call, so it is also timed with one process per CPU core
+running in parallel. `--full` additionally times that on the whole generated corpus.
 """
 
 import glob
@@ -9,9 +12,13 @@ import statistics
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 REPO, DATACONTRACT = sys.argv[1], sys.argv[2]
-FILES = int(sys.argv[3]) if len(sys.argv) > 3 else 200
+OPTIONS = sys.argv[3:]
+FILES = next((int(option) for option in OPTIONS if option.isdigit()), 200)
+FULL = "--full" in OPTIONS
+WORKERS = os.cpu_count() or 1
 ODCSLINT = os.path.join(REPO, "target/release/odcslint")
 EXAMPLES = sorted(glob.glob(f"{REPO}/tests/fixtures/upstream/examples/**/*.odcs.yaml", recursive=True))
 NEGATIVE = sorted(glob.glob(f"{REPO}/tests/fixtures/upstream/negative-tests/*.odcs.yaml"))
@@ -32,6 +39,11 @@ def seconds(function, *args):
     start = time.perf_counter()
     function(*args)
     return time.perf_counter() - start
+
+
+def in_parallel(function, paths):
+    with ThreadPoolExecutor(max_workers=WORKERS) as pool:
+        list(pool.map(function, paths))
 
 
 def relative(paths):
@@ -56,10 +68,18 @@ for label, function in [("datacontract lint", datacontract), ("odcslint check", 
 files = CORPUS[:FILES]
 print(f"\n== {len(files)} contracts from target/corpus")
 per_file_datacontract = seconds(lambda: [datacontract(path) for path in files])
+parallel_datacontract = seconds(in_parallel, datacontract, files)
 per_file_odcslint = seconds(lambda: [odcslint(path) for path in files])
 batch_odcslint = statistics.median(seconds(odcslint, *files) for _ in range(5))
 corpus_odcslint = statistics.median(seconds(odcslint, f"{REPO}/target/corpus") for _ in range(5))
 print(f"  datacontract lint, one call per file: {per_file_datacontract:8.2f} s")
+print(f"  datacontract lint, {WORKERS} in parallel:       {parallel_datacontract:8.2f} s")
 print(f"  odcslint, one call per file:          {per_file_odcslint:8.2f} s")
 print(f"  odcslint, one call:                   {batch_odcslint:8.3f} s")
 print(f"  odcslint, whole corpus ({len(CORPUS)} files): {corpus_odcslint:8.3f} s")
+
+if FULL:
+    print(f"\n== Whole corpus ({len(CORPUS)} files)")
+    full_datacontract = seconds(in_parallel, datacontract, CORPUS)
+    print(f"  datacontract lint, {WORKERS} in parallel:       {full_datacontract:8.2f} s")
+    print(f"  odcslint, one call:                   {corpus_odcslint:8.3f} s")

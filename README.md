@@ -9,11 +9,15 @@ A fast, Rust-powered linter for [Open Data Contract Standard (ODCS)](https://bit
 Full documentation: **[feliblo.github.io/odcslint](https://feliblo.github.io/odcslint/)**
 
 - **Fast validation against the official ODCS schema**
-  - **40-3,200×** faster than `datacontract lint` (see the [benchmarks](https://feliblo.github.io/odcslint/performance/))
+  - **40-1,800×** faster than `datacontract lint` (see the [benchmarks](https://feliblo.github.io/odcslint/performance/))
 - **Custom business rules in simple YAML**, with autofix
   - approved owners and known domains
   - column order: primary keys first, metadata columns last
   - naming conventions, required fields and tags
+- **Automatic upgrades between ODCS versions** with `odcslint upgrade`
+  - converts breaking changes for you, such as team lists and quality rules
+  - keeps your comments and formatting
+  - `--dry-run` shows what would change first
 
 ## Installation
 
