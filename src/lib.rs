@@ -10,3 +10,4 @@ pub mod fix;
 pub mod report;
 pub mod rules;
 pub mod schema;
+pub mod upgrade;

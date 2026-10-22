@@ -29,6 +29,9 @@ pub enum Error {
     #[error("invalid glob pattern `{pattern}`: {message}")]
     Glob { pattern: String, message: String },
 
+    #[error("unknown ODCS version `{value}`; supported versions: {supported}")]
+    UnknownVersion { value: String, supported: String },
+
     #[error("no contract files found (pass --allow-empty to accept this)")]
     NoFiles,
 

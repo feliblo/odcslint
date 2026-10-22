@@ -1,4 +1,5 @@
 mod init;
+mod upgrade;
 
 use std::fs;
 use std::io::{IsTerminal, Write};
@@ -39,6 +40,8 @@ pub enum Command {
     Init(InitArgs),
     /// List the available rule types.
     Rules,
+    /// Move contracts to a newer ODCS version, converting breaking changes where possible.
+    Upgrade(UpgradeArgs),
 }
 
 #[derive(Debug, Args)]
@@ -82,6 +85,38 @@ pub struct CheckArgs {
 }
 
 #[derive(Debug, Args)]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "each bool is an independent CLI flag"
+)]
+pub struct UpgradeArgs {
+    /// Files, directories or glob patterns to upgrade.
+    #[arg(default_value = CURRENT_DIRECTORY)]
+    pub paths: Vec<String>,
+    /// ODCS version to upgrade to, e.g. v3.2.0 (default: the newest supported version).
+    #[arg(long)]
+    pub to: Option<String>,
+    /// Show what would change without writing any file.
+    #[arg(long)]
+    pub dry_run: bool,
+    /// Also write files that still need manual changes, and list those changes.
+    #[arg(long)]
+    pub allow_partial: bool,
+    /// Config file to use instead of discovering one in the current directory.
+    #[arg(short, long)]
+    pub config: Option<PathBuf>,
+    /// Apply `settings.exclude` to files passed explicitly.
+    #[arg(long)]
+    pub force_exclude: bool,
+    /// Do not respect .gitignore, .ignore and hidden-file rules.
+    #[arg(long)]
+    pub no_ignore: bool,
+    /// Succeed when no contract files are found.
+    #[arg(long)]
+    pub allow_empty: bool,
+}
+
+#[derive(Debug, Args)]
 pub struct InitArgs {
     /// Directory to write the config file to.
     #[arg(long, default_value = CURRENT_DIRECTORY)]
@@ -108,11 +143,21 @@ pub fn run(cli: &Cli) -> Result<u8> {
             write_output(None, &rules_table())?;
             Ok(exit_code::SUCCESS)
         }
+        Command::Upgrade(args) => upgrade::run(args),
     }
 }
 
-fn check(args: &CheckArgs) -> Result<u8> {
-    let config_path = match &args.config {
+/// Inputs shared by commands that work on discovered contracts.
+struct Selection<'a> {
+    paths: &'a [String],
+    config: Option<&'a PathBuf>,
+    force_exclude: bool,
+    no_ignore: bool,
+    allow_empty: bool,
+}
+
+fn load_and_discover(selection: &Selection<'_>) -> Result<(config::Config, Vec<PathBuf>)> {
+    let config_path = match selection.config {
         Some(path) => Some(path.clone()),
         None => {
             config::find(Path::new(CURRENT_DIRECTORY))?.map(|found| relative_to_current(&found))
@@ -126,18 +171,29 @@ fn check(args: &CheckArgs) -> Result<u8> {
     );
     let config = config::load(config_path.as_deref())?;
     let paths = discover(
-        &args.paths,
+        selection.paths,
         &Discovery {
             include: &config.settings.include,
             exclude: &config.settings.exclude,
-            force_exclude: args.force_exclude,
-            respect_ignore: !args.no_ignore,
+            force_exclude: selection.force_exclude,
+            respect_ignore: !selection.no_ignore,
             root: &config.root,
         },
     )?;
-    if paths.is_empty() && !args.allow_empty {
+    if paths.is_empty() && !selection.allow_empty {
         return Err(Error::NoFiles);
     }
+    Ok((config, paths))
+}
+
+fn check(args: &CheckArgs) -> Result<u8> {
+    let (config, paths) = load_and_discover(&Selection {
+        paths: &args.paths,
+        config: args.config.as_ref(),
+        force_exclude: args.force_exclude,
+        no_ignore: args.no_ignore,
+        allow_empty: args.allow_empty,
+    })?;
 
     let started = Instant::now();
     let reports = check_files(&paths, &config, args.fix)?;

@@ -1,6 +1,7 @@
 //! Fixes never re-serialize YAML: they replace byte ranges, so everything outside an edit is preserved.
 
 pub mod block_seq;
+pub mod text;
 
 use std::ops::Range;
 
@@ -27,28 +28,37 @@ pub struct Fix {
 
 /// Overlapping fixes (e.g. a nested list inside a reordered parent) are picked up in a later pass.
 pub fn non_overlapping(fixes: Vec<Fix>) -> Vec<Fix> {
-    let mut sorted = fixes;
-    sorted.sort_by_key(|fix| (fix.edit.range.start, fix.edit.range.end));
+    non_overlapping_by(fixes, |fix| &fix.edit)
+}
+
+pub fn non_overlapping_by<T>(items: Vec<T>, edit: impl Fn(&T) -> &TextEdit) -> Vec<T> {
+    let mut sorted = items;
+    sorted.sort_by_key(|item| (edit(item).range.start, edit(item).range.end));
     sorted
         .into_iter()
-        .fold(Vec::new(), |mut accepted: Vec<Fix>, fix| {
+        .fold(Vec::new(), |mut accepted: Vec<T>, item| {
             let free = accepted
                 .last()
-                .is_none_or(|last| last.edit.range.end <= fix.edit.range.start);
+                .is_none_or(|last| edit(last).range.end <= edit(&item).range.start);
             if free {
-                accepted.push(fix);
+                accepted.push(item);
             }
             accepted
         })
 }
 
 pub fn apply(source: &str, fixes: &[Fix]) -> String {
-    let (mut output, end) = fixes.iter().fold(
+    apply_edits(source, fixes.iter().map(|fix| &fix.edit))
+}
+
+/// Applies edits that are sorted by position and don't overlap.
+pub fn apply_edits<'a>(source: &str, edits: impl IntoIterator<Item = &'a TextEdit>) -> String {
+    let (mut output, end) = edits.into_iter().fold(
         (String::with_capacity(source.len()), 0),
-        |(mut output, cursor), fix| {
-            output.push_str(&source[cursor..fix.edit.range.start]);
-            output.push_str(&fix.edit.replacement);
-            (output, fix.edit.range.end)
+        |(mut output, cursor), edit| {
+            output.push_str(&source[cursor..edit.range.start]);
+            output.push_str(&edit.replacement);
+            (output, edit.range.end)
         },
     );
     output.push_str(&source[end..]);

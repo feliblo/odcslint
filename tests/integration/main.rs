@@ -9,3 +9,4 @@ mod common;
 mod corpus;
 mod docs;
 mod fix;
+mod upgrade;
