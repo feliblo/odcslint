@@ -10,7 +10,7 @@ hide:
 
 <p class="hero-tagline">Lint your data contracts against the standard <em>and</em> your own rules.</p>
 
-odcslint is a linter for [Open Data Contract Standard (ODCS)](https://bitol-io.github.io/open-data-contract-standard/) contracts, written in Rust. It checks every contract against the official schema and against the conventions your team agrees on. Where it can, it fixes problems for you and leaves your formatting alone.
+odcslint is a linter for [Open Data Contract Standard (ODCS)](https://bitol-io.github.io/open-data-contract-standard/) contracts, written in Rust. It checks every contract against the official schema and against the conventions your team agrees on. Where it can, it fixes problems for you and leaves your formatting alone. When a new ODCS version comes out, `odcslint upgrade` moves your contracts to it.
 
 [Get started](installation.md){ .md-button .md-button--primary }
 [Browse the rules](rules/index.md){ .md-button }
@@ -51,6 +51,47 @@ odcslint is a linter for [Open Data Contract Standard (ODCS)](https://bitol-io.g
     [:lucide-arrow-right: All rules](rules/index.md)
 
 </div>
+
+## Quick start
+
+1.  Install odcslint:
+
+    === "pip / uv"
+
+        ```bash
+        pip install odcslint
+        ```
+
+    === "Homebrew"
+
+        ```bash
+        brew install feliblo/tap/odcslint
+        ```
+
+2.  Check every `*.odcs.yaml` below the current directory against the ODCS schema:
+
+    ```bash
+    odcslint check
+    ```
+
+3.  Write a starter `odcslint.yml`, then enable and tune the rules you want:
+
+    ```bash
+    odcslint init
+    ```
+
+4.  Fix what can be fixed:
+
+    ```bash
+    odcslint check --fix
+    ```
+
+5.  Move your contracts to the newest ODCS version, after checking what would change:
+
+    ```bash
+    odcslint upgrade --dry-run
+    odcslint upgrade
+    ```
 
 ## Autofix
 
@@ -142,37 +183,3 @@ Found 4 errors and 0 warnings (2 files checked). 2 findings marked [*] can be fi
     [:lucide-arrow-right: Usage](usage.md)
 
 </div>
-
-## Quick start
-
-1.  Install odcslint:
-
-    === "pip / uv"
-
-        ```bash
-        pip install odcslint
-        ```
-
-    === "Homebrew"
-
-        ```bash
-        brew install feliblo/tap/odcslint
-        ```
-
-2.  Check every `*.odcs.yaml` below the current directory against the ODCS schema:
-
-    ```bash
-    odcslint check
-    ```
-
-3.  Write a starter `odcslint.yml`, then enable and tune the rules you want:
-
-    ```bash
-    odcslint init
-    ```
-
-4.  Fix what can be fixed:
-
-    ```bash
-    odcslint check --fix
-    ```
