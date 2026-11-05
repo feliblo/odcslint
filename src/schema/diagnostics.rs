@@ -11,7 +11,7 @@ use crate::document::pointer::resolve;
 use crate::document::Document;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-struct Issue {
+pub struct Issue {
     pointer: String,
     message: String,
     key: Option<String>,
@@ -21,12 +21,12 @@ struct Issue {
 /// `unevaluatedProperties` errors are dropped when another error exists at the same object or
 /// below it: a failing `if`/`then` or `$ref` branch discards its annotations, which makes every
 /// key it covers look unevaluated.
-pub fn findings<'e>(
+pub fn findings(
     document: &Document<'_>,
-    errors: impl Iterator<Item = ValidationError<'e>>,
+    issues: impl IntoIterator<Item = Issue>,
     severity: Severity,
 ) -> Vec<Finding> {
-    let issues: BTreeSet<Issue> = errors.map(|error| issue(&error)).collect();
+    let issues: BTreeSet<Issue> = issues.into_iter().collect();
     let primary: Vec<&str> = issues
         .iter()
         .filter(|issue| !issue.unevaluated)
@@ -62,7 +62,7 @@ pub fn findings<'e>(
         .collect()
 }
 
-fn is_within(pointer: &str, parent: &str) -> bool {
+pub fn is_within(pointer: &str, parent: &str) -> bool {
     pointer
         .strip_prefix(parent)
         .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
@@ -84,8 +84,9 @@ fn field_label(pointer: &str) -> Option<String> {
     }
 }
 
-fn issue(error: &ValidationError<'_>) -> Issue {
-    let pointer = error.instance_path().as_str().to_string();
+/// `prefix` is the pointer of the validated part within the whole contract.
+pub fn issue(error: &ValidationError<'_>, prefix: &str) -> Issue {
+    let pointer = format!("{prefix}{}", error.instance_path().as_str());
     let (message, key) = match error.kind() {
         ValidationErrorKind::AdditionalProperties { unexpected }
         | ValidationErrorKind::UnevaluatedProperties { unexpected } => (
