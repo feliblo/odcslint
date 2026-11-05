@@ -1,3 +1,13 @@
+## v0.3.1 (2026-11-05)
+
+### Perf
+
+- **schema**: validate nested properties level by level - ([31b326e](https://github.com/feliblo/odcslint/commit/31b326ed59b6f65ed187440fa1d683b66ed7c91f)) - feliblo
+
+### Contributors
+
+[@feliblo](https://github.com/feliblo)
+
 ## v0.3.0 (2026-10-22)
 
 ### Feat
